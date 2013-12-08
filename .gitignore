@@ -11,3 +11,7 @@
 *.lai
 *.la
 *.a
+/.project
+
+/hw2_pp_lang.pro
+/hw2_pp_lang.pro.user
