@@ -21,6 +21,7 @@ enum TokenType {ID,
                 CLOSE_BRACE,
                 COMMENT,
                 WHITESPACE,
+                NEWLINE,
                 UNKNOWN};
 
 static const string KEYWORDS[] = {"def", "end", "if", "while", "return",};

@@ -18,7 +18,7 @@ int main() {
     }
     vector<Token> tokens = lexer.tokens();
     for(size_t i = 0; i != tokens.size(); ++i) {
-        cout << (tokens[i]).value_ << endl;
+        cout << (tokens[i]).value_ << ' ';
     }
     return 0;
 }

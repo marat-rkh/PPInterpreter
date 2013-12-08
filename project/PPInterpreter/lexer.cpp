@@ -29,6 +29,7 @@ static const char CLOSE_BR = ')';
 static const char UNDERSC = '_';
 static const char SPACE = ' ';
 static const char TAB = '\t';
+static const char NLINE = '\n';
 
 //This function returns 0 if everything is fine.
 //If there is some lexical error in input file returns line number where the error occures
@@ -46,6 +47,7 @@ int Lexer::Tokenize(string const& file_name) {
         if(!TryParseLine(line)) {
             return current_line_;
         }
+        tokens_.push_back(Token(NEWLINE, string() + NLINE));
         ++current_line_;
     }
     return 0;
