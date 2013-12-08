@@ -1,0 +1,29 @@
+prog: stmt [prog]
+
+stmt: (func_delc | instruction | NEWLINE)*
+
+func_decl: DEF ID OPEN_BR [ID (COMMA ID)*] CLOSE_BR COLUMN NEWLINE (instruction)* END NEWLINE
+
+instruction: [COMMENT | io | control_flow_instr | expr] NEWLINE
+
+io: (READ | PRINT) ID
+
+control_flow_instr: (IF | WHILE) expr COMPARISON_CHAR expr COLUMN NEWLINE (instruction [RETURN [calc_expr]])* END
+
+expr:
+  assignment 
+| calc_expr
+
+assignment: ID ASSIGN arithm_expr
+
+calc_expr:
+  func_call
+| arithm_expr
+
+func_call: ID OPEN_BR [ID (COMMA ID)*] CLOSE_BR
+
+arithm_expr: term ((PLUS | MINUS) term)*
+
+term: fact ((MUL | DIV) fact)*
+
+fact: NUMBER | OPEN_BR arithm_expr COLSE_BR
