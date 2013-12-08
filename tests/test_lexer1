@@ -1,34 +1,28 @@
-# rootN.pp
-# вычисляет количество корней квадратного уравнения
-a = 0
-b = 0
-c = 0
-read a
-read b
-read c
-if a != 0:
-d = b * b - 4 * a * c
-if d > 0:
-print 2
-end
-if d == 0:
-print 1
-end
-if d < 0:
-print 0
+# rec.pp
+# пример взаимной рекурсии
+def foo(n):
+if n >= 0:
+return bar(n - 1)
 end
 end
-if a == 0:
-if b == 0:
-if c == 0:
-print -1 # для обозначения бесконечности
-end
-if c != 0:
-print 0
+def bar():
+if n > 0:
+return foo(n - 1)
 end
 end
-if b != 0:
-print 1
+print foo(10) # напечататет 0, foo и bar определены, а порядок не важен
+# rec_error.pp
+# пример взимной рекурсии с ошибкой
+def foo(n):
+4
+if n > 0:
+return bar(n - 1)
+end
+end
+print foo(10) # напечататет 0, порядок определений функций и инструкций не важен
+def bar():
+if n > 0:
+return foo(n - 1)
 end
 end
 
