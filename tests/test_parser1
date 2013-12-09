@@ -1,0 +1,7 @@
+# rec.pp
+# пример взаимной рекурсии
+def foo(n):
+end
+def bar():
+#comment3
+end
