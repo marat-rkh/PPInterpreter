@@ -23,7 +23,7 @@ static const char NOT = '!';
 static const char ASSIGN = '=';
 static const char COL = ':';
 static const char COM = ',';
-static const char OCTOTH = '#';
+static const char SHARP = '#';
 static const char OPEN_BR = '(';
 static const char CLOSE_BR = ')';
 static const char UNDERSC = '_';
@@ -69,10 +69,7 @@ bool Lexer::TryParseLine(string const& line) {
             token_val.clear();
             if(type == WHITESPACE) { continue; }
             //if current token is comment token begining
-            if(type == COMMENT) {
-                tokens_.push_back(Token(type, line.substr(i, line.size())));
-                return true;
-            }
+            if(type == COMMENT) { return true; }
             //if current token is 2 symbols comparison character
             else if(type == COMPARISON_CHAR && (i + 1) != line.size() && line[i + 1] == ASSIGN) {
                 tokens_.push_back(Token(type, (string() + line[i]) + line[i + 1])); // conversation from char to string
@@ -112,7 +109,7 @@ TokenType Lexer::DefineType(char symbol) {
     else if(isdigit(symbol) || isalpha(symbol) || symbol == UNDERSC) {
         return ID;
     }
-    else if(symbol == OCTOTH) {
+    else if(symbol == SHARP) {
         return COMMENT;
     }
     else if(symbol == TAB || symbol == SPACE) {
@@ -148,7 +145,7 @@ TokenType Lexer::DefineCompositeTokenType(string const& token_value) {
 bool Lexer::TokenIsKeyword(string token_value) {
     bool token_is_keyword = false;
     for(size_t i = 0; i != KEYWORDS_NUMBER; ++i) {
-        if(token_value.compare(KEYWORDS[i])) {
+        if(token_value == KEYWORDS[i]) {
             token_is_keyword = true;
             break;
         }

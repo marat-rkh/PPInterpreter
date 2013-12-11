@@ -1,10 +1,10 @@
 prog: stmt [prog]
 
-stmt: (func_delc | instruction | NEWLINE)*
+stmt: func_delc | instruction | NEWLINE
 
 func_decl: DEF ID OPEN_BR [ID (COMMA ID)*] CLOSE_BR COLUMN NEWLINE (instruction)* END NEWLINE
 
-instruction: [COMMENT | io | control_flow_instr | expr] NEWLINE
+instruction: [io | control_flow_instr | expr] NEWLINE
 
 io: (READ | PRINT) ID
 

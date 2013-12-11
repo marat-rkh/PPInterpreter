@@ -5,34 +5,18 @@
 #include <vector>
 #include <fstream>
 
+#include "token.h"
+
+#define DISABLE_COPY_AND_ASSIGN(TypeName) \
+    TypeName(TypeName const&); \
+    void operator=(TypeName const&)
+
 using std::string;
 using std::fstream;
 using std::vector;
 
-enum TokenType {ID,
-                KEYWORD,
-                NUMBER,
-                ARITHMETIC_OP,
-                COMPARISON_CHAR,
-                ASSIGN_OP,
-                COLUMN,
-                COMMA,
-                OPEN_BRACE,
-                CLOSE_BRACE,
-                COMMENT,
-                WHITESPACE,
-                NEWLINE,
-                UNKNOWN};
-
 static const string KEYWORDS[] = {"def", "end", "if", "while", "return",};
 static const size_t KEYWORDS_NUMBER = 5;
-
-class Token {
-  public:
-    Token(TokenType type, string val): type_(type), value_(val) {}
-    TokenType type_;
-    string value_;
-};
 
 class Lexer {
   public:
@@ -41,6 +25,8 @@ class Lexer {
     vector<Token> tokens() { return tokens_; }
 
   private:
+    DISABLE_COPY_AND_ASSIGN(Lexer);
+
     bool TryParseLine(string const& line);
     TokenType DefineType(char symbol);
     bool TryParseCompositeToken(string const& token_value);
