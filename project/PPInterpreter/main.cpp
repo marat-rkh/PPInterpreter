@@ -10,8 +10,8 @@ void PrintTokens(vector<Token>& tokens);
 
 int main() {
     Lexer lexer;
-    string test_file = "../../tests/test_parser1";
-    ssize_t res = lexer.Tokenize(test_file);
+    string test_file = "../../../../tests/test_parser1";
+    int res = lexer.Tokenize(test_file);
     if(res < 0) {
         cout << "Lexer: can't open file" << endl;
         return 0;
@@ -28,8 +28,9 @@ int main() {
         cout << "Parser: parsing error at line: " << res << endl;
     }
     else {
-        cout << "Pasing successful! = )" << endl;
+        cout << "Parsing successful! = )" << endl;
     }
+	system("pause");
     return 0;
 }
 

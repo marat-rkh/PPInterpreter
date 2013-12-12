@@ -15,8 +15,8 @@ using std::string;
 using std::fstream;
 using std::vector;
 
-static const string KEYWORDS[] = {"def", "end", "if", "while", "return",};
-static const size_t KEYWORDS_NUMBER = 5;
+static const string KEYWORDS[] = {"def", "end", "if", "while", "return", "print", "read"};
+static const size_t KEYWORDS_NUMBER = 7;
 
 class Lexer {
   public:

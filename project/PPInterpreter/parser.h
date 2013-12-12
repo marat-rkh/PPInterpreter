@@ -32,6 +32,8 @@ class Parser {
     bool CheckFuncBody();
 
     ParsingResult ParseInstruction();
+	ParsingResult ParseIOInstr();
+	ParsingResult ParseControlFlowInstr();
 
     TokenStream tokens_;
     size_t current_line_;

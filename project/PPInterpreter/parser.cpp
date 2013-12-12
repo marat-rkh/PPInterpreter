@@ -76,3 +76,17 @@ ParsingResult Parser::ParseInstruction() {
     ++current_line_;
     return CORRECT;
 }
+
+ParsingResult Parser::ParseIOInstr() {
+	if(!tokens_.CompareValueWithRollback(KEYWORDS[5]) && !tokens_.CompareValueWithRollback(KEYWORDS[6])) {
+		return NOT_MATCHED;
+	}
+	return tokens_.CompareTypeWithRollback(ID) ? CORRECT : INCORRECT;
+}
+
+ParsingResult Parser::ParseControlFlowInstr() {
+	if(!tokens_.CompareValueWithRollback(KEYWORDS[2]) && !tokens_.CompareValueWithRollback(KEYWORDS[3])) {
+		return NOT_MATCHED;
+	}
+
+}

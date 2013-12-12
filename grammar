@@ -4,11 +4,11 @@ stmt: func_delc | instruction | NEWLINE
 
 func_decl: DEF ID OPEN_BR [ID (COMMA ID)*] CLOSE_BR COLUMN NEWLINE (instruction)* END NEWLINE
 
-instruction: [io | control_flow_instr | expr] NEWLINE
+instruction: [io | control_flow_instr | expr | RETURN [calc_expr]] NEWLINE
 
 io: (READ | PRINT) ID
 
-control_flow_instr: (IF | WHILE) expr COMPARISON_CHAR expr COLUMN NEWLINE (instruction [RETURN [calc_expr]])* END
+control_flow_instr: (IF | WHILE) expr COMPARISON_CHAR expr COLUMN NEWLINE (instruction)* END
 
 expr:
   assignment 
