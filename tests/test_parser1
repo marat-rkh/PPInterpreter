@@ -1,7 +1,29 @@
-# rec.pp
-# пример взаимной рекурсии
-def foo(n):
+# test_parser1
+
+# func1 declaration
+def func1(n, m):
+  if n>m:
+    print n
+  end
 end
-def bar():
-#comment3
+
+#func2 decl
+def func2():
+  #this functions returns smth
+  while x > y :
+    return x
+  end
 end
+
+x = null
+y = null
+read x
+read y
+
+while x == func2():
+  print func1(x, y)
+  return func2()
+end
+
+x = y
+y = x

@@ -19,12 +19,12 @@ static const string KEYWORDS[] = {"def", "end", "if", "while", "return", "print"
 static const size_t KEYWORDS_NUMBER = 7;
 
 class Lexer {
-  public:
+public:
     Lexer(): current_line_(1) {}
     int Tokenize(string const& file_name);
     vector<Token> tokens() { return tokens_; }
 
-  private:
+private:
     DISABLE_COPY_AND_ASSIGN(Lexer);
 
     bool TryParseLine(string const& line);

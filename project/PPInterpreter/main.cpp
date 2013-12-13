@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 
 #include "lexer.h"
 #include "parser.h"
@@ -10,7 +11,7 @@ void PrintTokens(vector<Token>& tokens);
 
 int main() {
     Lexer lexer;
-    string test_file = "../../../../tests/test_parser1";
+    string test_file = "../../tests/test_parser1";
     int res = lexer.Tokenize(test_file);
     if(res < 0) {
         cout << "Lexer: can't open file" << endl;
@@ -28,14 +29,22 @@ int main() {
         cout << "Parser: parsing error at line: " << res << endl;
     }
     else {
-        cout << "Parsing successful! = )" << endl;
+        cout << "Parsing successfuly proceeded! = )" << endl;
     }
-	system("pause");
     return 0;
 }
 
 void PrintTokens(vector<Token>& tokens) {
+    int counter = 1;
+    cout << 1 << ' ';
     for(size_t i = 0; i != tokens.size(); ++i) {
-        cout << (tokens[i]).value_ << ' ';
+        string tok_val = (tokens[i]).value_;
+        if(tok_val == "\n") {
+            cout << '\n' << ++counter << ' ';
+        }
+        else {
+            cout << (tokens[i]).value_ << ' ';
+        }
     }
+    cout << endl;
 }

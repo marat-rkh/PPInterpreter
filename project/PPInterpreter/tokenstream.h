@@ -14,8 +14,12 @@ using std::vector;
 using std::string;
 
 class TokenStream {
-  public:
-    TokenStream(vector<Token> const& tokens): tokens_(tokens), current_pos_(-1) {}
+public:
+    TokenStream(vector<Token> const& tokens):
+        tokens_(tokens),
+        current_pos_(-1),
+        fixed_pos_(-1)
+    {}
     bool NextTokenTypeEqualsTo(TokenType type) {
         return tokens_[++current_pos_].type_ == type;
     }
@@ -34,11 +38,15 @@ class TokenStream {
     bool CompareTypeWithRollback(TokenType type);
     bool CompareValueWithRollback(string value);
 
-  private:
+    void FixPosition() { fixed_pos_ = current_pos_; }
+    void RollbackToFixedPosition() { current_pos_ = fixed_pos_; }
+
+private:
     DISABLE_COPY_AND_ASSIGN(TokenStream);
 
     vector<Token> tokens_;
     int current_pos_;
+    int fixed_pos_;
 };
 
 #endif // TOKENSTREAM_H

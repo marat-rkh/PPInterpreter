@@ -15,25 +15,31 @@ using std::vector;
 enum ParsingResult {CORRECT, INCORRECT, NOT_MATCHED};
 
 class Parser {
-  public:
+public:
     Parser(vector<Token> const& tokens):
         tokens_(tokens),
         current_line_(1)
     {}
     size_t Parse();
 
-  private:
+private:
     DISABLE_COPY_AND_ASSIGN(Parser);
 
-    bool ParseStmt();
+    ParsingResult ParseStmt();
 
     ParsingResult ParseFuncDecl();
+    ParsingResult ParseFuncCall();
     bool CheckFuncParams();
-    bool CheckFuncBody();
+    bool CheckBlock();
+    bool CheckBlockBody();
 
     ParsingResult ParseInstruction();
-	ParsingResult ParseIOInstr();
-	ParsingResult ParseControlFlowInstr();
+    ParsingResult ParseIOInstr();
+    ParsingResult ParseControlFlowInstr();
+    ParsingResult ParseAssignment();
+    ParsingResult ParseReturnExpr();
+
+    ParsingResult ParseExpr();
 
     TokenStream tokens_;
     size_t current_line_;

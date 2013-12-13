@@ -77,6 +77,8 @@ bool Lexer::TryParseLine(string const& line) {
             }
             //if current token is one symbol token
             else {
+                //if current token is ASSIGN_OP
+                if(line[i] == ASSIGN) { type = ASSIGN_OP; }
                 tokens_.push_back(Token(type, string() + line[i]));
             }
         }
