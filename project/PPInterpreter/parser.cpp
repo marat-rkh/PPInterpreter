@@ -157,6 +157,122 @@ ParsingResult Parser::ParseExpr() {
     if(tokens_.CompareTypeWithRollback(ID)) {
         return CORRECT;
     }
-    //check ArithmExpr
+    ParsingResult arithm_expr_res = ParseArithmExpr();
+    if(arithm_expr_res != NOT_MATCHED) {
+        return arithm_expr_res == CORRECT ? CORRECT : INCORRECT;
+    }
     return NOT_MATCHED;
 }
+
+ParsingResult Parser::ParseArithmExpr() {
+    ParsingResult term_res = ParseTerm();
+    if(term_res != CORRECT) {
+        return term_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
+    }
+    return CheckArithmExprLoop() ? CORRECT : INCORRECT;
+}
+
+bool Parser::CheckArithmExprLoop() {
+    if(!tokens_.CompareTypeWithRollback(PLUS_OP) &&
+       !tokens_.CompareTypeWithRollback(MINUS_OP))
+    {
+        return true;
+    }
+    ParsingResult term_res = ParseTerm();
+    if(term_res != CORRECT) { return false; }
+    return CheckArithmExprLoop();
+}
+
+ParsingResult Parser::ParseTerm() {
+    ParsingResult fact_res = ParseFactor();
+    if(fact_res != CORRECT) {
+        return fact_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
+    }
+    return CheckTermLoop() ? CORRECT : INCORRECT;
+}
+
+bool Parser::CheckTermLoop() {
+    if(!tokens_.CompareTypeWithRollback(MUL_OP) &&
+       !tokens_.CompareTypeWithRollback(DIV_OP))
+    {
+        return true;
+    }
+    ParsingResult fact_res = ParseFactor();
+    if(fact_res != CORRECT) { return false; }
+    return CheckTermLoop();
+}
+
+ParsingResult Parser::ParseFactor() {
+    if(tokens_.CompareTypeWithRollback(NUMBER)) { return CORRECT; }
+    ParsingResult func_call_res = ParseFuncCall();
+    if(func_call_res != NOT_MATCHED) {
+        return func_call_res == CORRECT ? CORRECT : INCORRECT;
+    }
+    if(tokens_.CompareTypeWithRollback(ID)) { return CORRECT; }
+    if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }
+    ParsingResult arithm_expr_res = ParseArithmExpr();
+    if(arithm_expr_res != CORRECT) {
+        return INCORRECT;
+    }
+    return tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE) ? CORRECT : INCORRECT;
+}
+
+//ParsingResult Parser::ParseArithmExpr(int& i) {
+//    ParsingResult term_res = ParseTerm(i);
+//    if(term_res != CORRECT) {
+//        return term_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
+//    }
+//    return CheckArithmExprLoop(i) ? CORRECT : INCORRECT;
+//}
+
+//bool Parser::CheckArithmExprLoop(int& i) {
+//    if(!tokens_.CompareTypeWithRollback(PLUS_OP) &&
+//       !tokens_.CompareTypeWithRollback(MINUS_OP))
+//    {
+//        return true;
+//    }
+//    int res = 0;
+//    ParsingResult term_res = ParseTerm(res);
+//    if(term_res != CORRECT) { return false; }
+//    i += res;
+//    return CheckArithmExprLoop(i);
+//}
+
+//ParsingResult Parser::ParseTerm(int& i) {
+//    ParsingResult fact_res = ParseFactor(i);
+//    if(fact_res != CORRECT) {
+//        return fact_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
+//    }
+//    return CheckTermLoop(i) ? CORRECT : INCORRECT;
+//}
+
+//bool Parser::CheckTermLoop(int& i) {
+//    if(!tokens_.CompareTypeWithRollback(MUL_OP) &&
+//       !tokens_.CompareTypeWithRollback(DIV_OP))
+//    {
+//        return true;
+//    }
+//    int res = 0;
+//    ParsingResult fact_res = ParseFactor(res);
+//    if(fact_res != CORRECT) { return false; }
+//    i *= res;
+//    return CheckTermLoop(i);
+//}
+
+//ParsingResult Parser::ParseFactor(int& i) {
+//    if(tokens_.CompareTypeWithRollback(NUMBER)) {
+//        i = atoi(tokens_.val().c_str());
+//        return CORRECT; }
+//    ParsingResult func_call_res = ParseFuncCall();
+//    if(func_call_res != NOT_MATCHED) {
+//        return func_call_res == CORRECT ? CORRECT : INCORRECT;
+//    }
+//    if(tokens_.CompareTypeWithRollback(ID)) { return CORRECT; }
+//    if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }
+//    ParsingResult arithm_expr_res = ParseArithmExpr(i);
+//    if(arithm_expr_res != CORRECT) {
+//        return INCORRECT;
+//    }
+//    return tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE) ? CORRECT : INCORRECT;
+//}
+

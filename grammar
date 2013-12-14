@@ -4,23 +4,23 @@ stmt: func_delc | instruction
 
 func_decl: DEF func_call COLUMN NEWLINE ([instruction] NEWLINE)* END
 
+func_call: ID OPEN_BR [ID (COMMA ID)*] CLOSE_BR
+
 instruction: io | control_flow_instr | assignment | func_call | RETURN [expr]
 
 io: (READ ID | PRINT expr)
 
 control_flow_instr: (IF | WHILE) expr COMPARISON_CHAR expr COLUMN NEWLINE ([instruction] NEWLINE)* END
 
+assignment: ID ASSIGN expr
+
 expr:
   func_call
 | arithm_expr
 | ID
 
-assignment: ID ASSIGN expr
-
-func_call: ID OPEN_BR [ID (COMMA ID)*] CLOSE_BR
-
 arithm_expr: term ((PLUS | MINUS) term)*
 
 term: fact ((MUL | DIV) fact)*
 
-fact: NUMBER | OPEN_BR arithm_expr CLOSE_BR
+fact: NUMBER | ID | func_call | OPEN_BR arithm_expr CLOSE_BR

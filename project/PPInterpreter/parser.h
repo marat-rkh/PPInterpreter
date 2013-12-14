@@ -40,6 +40,11 @@ private:
     ParsingResult ParseReturnExpr();
 
     ParsingResult ParseExpr();
+    ParsingResult ParseArithmExpr();
+    bool CheckArithmExprLoop();
+    ParsingResult ParseTerm();
+    bool CheckTermLoop();
+    ParsingResult ParseFactor();
 
     TokenStream tokens_;
     size_t current_line_;

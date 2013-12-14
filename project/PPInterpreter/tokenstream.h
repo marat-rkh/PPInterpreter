@@ -41,6 +41,10 @@ public:
     void FixPosition() { fixed_pos_ = current_pos_; }
     void RollbackToFixedPosition() { current_pos_ = fixed_pos_; }
 
+    string val() {
+        return tokens_[current_pos_].value_;
+    }
+
 private:
     DISABLE_COPY_AND_ASSIGN(TokenStream);
 

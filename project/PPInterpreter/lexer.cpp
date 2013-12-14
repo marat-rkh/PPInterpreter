@@ -90,8 +90,20 @@ bool Lexer::TryParseLine(string const& line) {
 }
 
 TokenType Lexer::DefineType(char symbol) {
-    if(symbol == PLUS || symbol == MINUS || symbol == MUL || symbol == DIV) {
-        return ARITHMETIC_OP;
+    if(isdigit(symbol) || isalpha(symbol) || symbol == UNDERSC) {
+        return ID;
+    }
+    else if(symbol == PLUS) {
+        return PLUS_OP;
+    }
+    else if(symbol == MINUS) {
+        return MINUS_OP;
+    }
+    else if(symbol == MUL) {
+        return MUL_OP;
+    }
+    else if(symbol == DIV) {
+        return DIV_OP;
     }
     else if(symbol == GR || symbol == LESS || symbol == NOT || symbol == ASSIGN) {
         return COMPARISON_CHAR;
@@ -107,9 +119,6 @@ TokenType Lexer::DefineType(char symbol) {
     }
     else if(symbol == CLOSE_BR) {
         return CLOSE_BRACE;
-    }
-    else if(isdigit(symbol) || isalpha(symbol) || symbol == UNDERSC) {
-        return ID;
     }
     else if(symbol == SHARP) {
         return COMMENT;
