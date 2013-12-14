@@ -26,29 +26,50 @@ ParsingResult Parser::ParseFuncDecl() {
     if(!tokens_.CompareValueWithRollback(KEYWORDS[0])) {
         return NOT_MATCHED;
     }
-    ParsingResult func_call_res = ParseFuncCall();
-    if(func_call_res != CORRECT) { return INCORRECT; }
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncDeclParams);
+    if(func_res != CORRECT) { return INCORRECT; }
     if(!CheckBlock()) { return INCORRECT; }
     return CORRECT;
 }
 
-ParsingResult Parser::ParseFuncCall() {
+ParsingResult Parser::ParseFuncHeader(CheckerFunc ParamsChecker) {
     tokens_.FixPosition();
     if(!tokens_.CompareTypeWithRollback(ID)) { return NOT_MATCHED; }
     if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) {
         tokens_.RollbackToFixedPosition();
         return NOT_MATCHED;
     }
-    if(tokens_.CompareTypeWithRollback(ID) && !CheckFuncParams()) { return INCORRECT; }
-    if(!tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE)) { return INCORRECT; }
+    if(!(this->*ParamsChecker)() ||
+       !tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE)) { return INCORRECT; }
     return CORRECT;
 }
-// func call and func signature in declaration must be different,
-// in call we can write func(n - 1, x). See grammatics
-bool Parser::CheckFuncParams() {
+
+bool Parser::CheckFuncDeclParams() {
+    if(!tokens_.CompareTypeWithRollback(ID)) { return true; }
+    return CheckFuncDeclParamsLoop() ? true : false;
+}
+
+bool Parser::CheckFuncDeclParamsLoop() {
     if(!tokens_.CompareTypeWithRollback(COMMA)) { return true; }
     else if(!tokens_.NextTokenTypeEqualsTo(ID)) { return false; }
-    return CheckFuncParams();
+    return CheckFuncDeclParamsLoop();
+}
+
+bool Parser::CheckFuncCallParams() {
+    ParsingResult expr_res = ParseExpr();
+    if(expr_res != CORRECT) {
+        return expr_res == NOT_MATCHED;
+    }
+    return CheckFuncCallParamsLoop() ? true : false;
+}
+
+bool Parser::CheckFuncCallParamsLoop() {
+    if(!tokens_.CompareTypeWithRollback(COMMA)) { return true; }
+    else {
+        ParsingResult expr_res = ParseExpr();
+        if(expr_res != CORRECT) { return false; }
+    }
+    return CheckFuncCallParamsLoop();
 }
 
 bool Parser::CheckBlock() {
@@ -85,9 +106,9 @@ ParsingResult Parser::ParseInstruction() {
     if(assign_res != NOT_MATCHED) {
         return assign_res == CORRECT ? CORRECT : INCORRECT;
     }
-    ParsingResult func_call_res = ParseFuncCall();
-    if(func_call_res != NOT_MATCHED) {
-        return func_call_res == CORRECT ? CORRECT : INCORRECT;
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams);
+    if(func_res != NOT_MATCHED) {
+        return func_res == CORRECT ? CORRECT : INCORRECT;
     }
     ParsingResult return_expr_res = ParseReturnExpr();
     if(return_expr_res != NOT_MATCHED) {
@@ -151,29 +172,14 @@ ParsingResult Parser::ParseReturnExpr() {
 }
 
 ParsingResult Parser::ParseExpr() {
-    ParsingResult arithm_expr_res = ParseArithmExpr();
-    if(arithm_expr_res != NOT_MATCHED) {
-        return arithm_expr_res == CORRECT ? CORRECT : INCORRECT;
-    }
-    ParsingResult func_call_res = ParseFuncCall();
-    if(func_call_res != NOT_MATCHED) {
-        return func_call_res == CORRECT ? CORRECT : INCORRECT;
-    }
-    if(tokens_.CompareTypeWithRollback(ID)) {
-        return CORRECT;
-    }
-    return NOT_MATCHED;
-}
-
-ParsingResult Parser::ParseArithmExpr() {
     ParsingResult term_res = ParseTerm();
     if(term_res != CORRECT) {
         return term_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
     }
-    return CheckArithmExprLoop() ? CORRECT : INCORRECT;
+    return CheckExprLoop() ? CORRECT : INCORRECT;
 }
 
-bool Parser::CheckArithmExprLoop() {
+bool Parser::CheckExprLoop() {
     if(!tokens_.CompareTypeWithRollback(PLUS_OP) &&
        !tokens_.CompareTypeWithRollback(MINUS_OP))
     {
@@ -181,7 +187,7 @@ bool Parser::CheckArithmExprLoop() {
     }
     ParsingResult term_res = ParseTerm();
     if(term_res != CORRECT) { return false; }
-    return CheckArithmExprLoop();
+    return CheckExprLoop();
 }
 
 ParsingResult Parser::ParseTerm() {
@@ -205,14 +211,14 @@ bool Parser::CheckTermLoop() {
 
 ParsingResult Parser::ParseFactor() {
     if(tokens_.CompareTypeWithRollback(NUMBER)) { return CORRECT; }
-    ParsingResult func_call_res = ParseFuncCall();
-    if(func_call_res != NOT_MATCHED) {
-        return func_call_res == CORRECT ? CORRECT : INCORRECT;
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams);
+    if(func_res != NOT_MATCHED) {
+        return func_res == CORRECT ? CORRECT : INCORRECT;
     }
     if(tokens_.CompareTypeWithRollback(ID)) { return CORRECT; }
     if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }
-    ParsingResult arithm_expr_res = ParseArithmExpr();
-    if(arithm_expr_res != CORRECT) {
+    ParsingResult expr_res = ParseExpr();
+    if(expr_res != CORRECT) {
         return INCORRECT;
     }
     return tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE) ? CORRECT : INCORRECT;

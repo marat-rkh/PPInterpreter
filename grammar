@@ -14,13 +14,8 @@ control_flow_instr: (IF | WHILE) expr COMPARISON_CHAR expr COLUMN NEWLINE ([inst
 
 assignment: ID ASSIGN expr
 
-expr:
-  func_call
-| arithm_expr
-| ID
-
-arithm_expr: term ((PLUS | MINUS) term)*
+expr: term ((PLUS | MINUS) term)*
 
 term: fact ((MUL | DIV) fact)*
 
-fact: NUMBER | ID | func_call | OPEN_BR arithm_expr CLOSE_BR
+fact: NUMBER | ID | func_call | OPEN_BR expr CLOSE_BR

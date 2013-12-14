@@ -27,9 +27,14 @@ private:
 
     ParsingResult ParseStmt();
 
+    typedef bool (Parser::*CheckerFunc)();
     ParsingResult ParseFuncDecl();
-    ParsingResult ParseFuncCall();
-    bool CheckFuncParams();
+    ParsingResult ParseFuncHeader(CheckerFunc checker_func);
+
+    bool CheckFuncDeclParams();
+    bool CheckFuncDeclParamsLoop();
+    bool CheckFuncCallParams();
+    bool CheckFuncCallParamsLoop();
     bool CheckBlock();
     bool CheckBlockBody();
 
@@ -40,8 +45,7 @@ private:
     ParsingResult ParseReturnExpr();
 
     ParsingResult ParseExpr();
-    ParsingResult ParseArithmExpr();
-    bool CheckArithmExprLoop();
+    bool CheckExprLoop();
     ParsingResult ParseTerm();
     bool CheckTermLoop();
     ParsingResult ParseFactor();
