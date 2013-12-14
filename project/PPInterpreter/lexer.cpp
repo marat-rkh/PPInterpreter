@@ -57,12 +57,8 @@ bool Lexer::TryParseLine(string const& line) {
     string token_val;
     for(size_t i = 0; i != line.size(); ++i) {
         TokenType type = DefineType(line[i]);
-        if(type == UNKNOWN) {
-            return false;
-        }
-        if(type == ID) {
-            token_val += line[i];
-        }
+        if(type == UNKNOWN) { return false; }
+        if(type == ID) { token_val += line[i]; }
         //if current symbol is not a part of ID, KEYWORD or NUMBER tokens
         else {
             if(!TryParseCompositeToken(token_val)) { return false; }

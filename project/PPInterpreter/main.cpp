@@ -14,6 +14,7 @@ int main() {
 //    string test_file = "../../tests/test_parser1";
 //    string test_file = "../../tests/test_arithm_expr1";
     string test_file = "../../tests/test_parser2";
+//    string test_file = "../../tests/test_lexer1";
     int res = lexer.Tokenize(test_file);
     if(res < 0) {
         cout << "Lexer: can't open file" << endl;

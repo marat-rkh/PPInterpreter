@@ -210,6 +210,8 @@ bool Parser::CheckTermLoop() {
 }
 
 ParsingResult Parser::ParseFactor() {
+    if(tokens_.CompareTypeWithRollback(MINUS_OP)) { /*code to add minus to number*/ }
+    if(tokens_.CompareTypeWithRollback(PLUS_OP)) { /*code to add plus to number*/ }
     if(tokens_.CompareTypeWithRollback(NUMBER)) { return CORRECT; }
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams);
     if(func_res != NOT_MATCHED) {

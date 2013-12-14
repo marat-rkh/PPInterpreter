@@ -18,4 +18,4 @@ expr: term ((PLUS | MINUS) term)*
 
 term: fact ((MUL | DIV) fact)*
 
-fact: NUMBER | ID | func_call | OPEN_BR expr CLOSE_BR
+fact: [MINUS | PLUS] NUMBER | ID | func_call | OPEN_BR expr CLOSE_BR
