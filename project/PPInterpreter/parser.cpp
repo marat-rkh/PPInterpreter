@@ -43,7 +43,8 @@ ParsingResult Parser::ParseFuncCall() {
     if(!tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE)) { return INCORRECT; }
     return CORRECT;
 }
-
+// func call and func signature in declaration must be different,
+// in call we can write func(n - 1, x). See grammatics
 bool Parser::CheckFuncParams() {
     if(!tokens_.CompareTypeWithRollback(COMMA)) { return true; }
     else if(!tokens_.NextTokenTypeEqualsTo(ID)) { return false; }
@@ -150,16 +151,16 @@ ParsingResult Parser::ParseReturnExpr() {
 }
 
 ParsingResult Parser::ParseExpr() {
+    ParsingResult arithm_expr_res = ParseArithmExpr();
+    if(arithm_expr_res != NOT_MATCHED) {
+        return arithm_expr_res == CORRECT ? CORRECT : INCORRECT;
+    }
     ParsingResult func_call_res = ParseFuncCall();
     if(func_call_res != NOT_MATCHED) {
         return func_call_res == CORRECT ? CORRECT : INCORRECT;
     }
     if(tokens_.CompareTypeWithRollback(ID)) {
         return CORRECT;
-    }
-    ParsingResult arithm_expr_res = ParseArithmExpr();
-    if(arithm_expr_res != NOT_MATCHED) {
-        return arithm_expr_res == CORRECT ? CORRECT : INCORRECT;
     }
     return NOT_MATCHED;
 }

@@ -2,9 +2,9 @@ prog: [stmt] NEWLINE [prog]
 
 stmt: func_delc | instruction
 
-func_decl: DEF func_call COLUMN NEWLINE ([instruction] NEWLINE)* END
+func_decl: DEF [ID (COMMA ID)*] COLUMN NEWLINE ([instruction] NEWLINE)* END
 
-func_call: ID OPEN_BR [ID (COMMA ID)*] CLOSE_BR
+func_call: ID OPEN_BR [expr (COMMA expr)*] CLOSE_BR
 
 instruction: io | control_flow_instr | assignment | func_call | RETURN [expr]
 

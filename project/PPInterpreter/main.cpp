@@ -11,8 +11,9 @@ void PrintTokens(vector<Token>& tokens);
 
 int main() {
     Lexer lexer;
-    string test_file = "../../tests/test_parser1";
+//    string test_file = "../../tests/test_parser1";
 //    string test_file = "../../tests/test_arithm_expr1";
+    string test_file = "../../tests/test_parser2";
     int res = lexer.Tokenize(test_file);
     if(res < 0) {
         cout << "Lexer: can't open file" << endl;
