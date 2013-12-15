@@ -5,6 +5,15 @@
 
 #include "token.h"
 #include "tokenstream.h"
+#include "program.h"
+
+#include "evaluatable.h"
+#include "function.h"
+#include "instruction.h"
+#include "returninstr.h"
+#include "printinstr.h"
+
+#include <memory>
 
 #define DISABLE_COPY_AND_ASSIGN(TypeName) \
     TypeName(TypeName const&); \
@@ -18,7 +27,8 @@ class Parser {
 public:
     Parser(vector<Token> const& tokens):
         tokens_(tokens),
-        current_line_(1)
+        current_line_(1),
+        program_()
     {}
     size_t Parse();
 
@@ -52,6 +62,7 @@ private:
 
     TokenStream tokens_;
     size_t current_line_;
+    Program program_;
 };
 
 #endif // PARSER_H

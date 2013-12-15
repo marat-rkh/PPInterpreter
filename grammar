@@ -2,7 +2,7 @@ prog: [stmt] NEWLINE [prog]
 
 stmt: func_delc | instruction
 
-func_decl: DEF [ID (COMMA ID)*] COLUMN NEWLINE ([instruction] NEWLINE)* END
+func_decl: DEF ID OPEN_BR [ID (COMMA ID)*] CLOSE_BR COLUMN NEWLINE ([instruction] NEWLINE)* END
 
 func_call: ID OPEN_BR [expr (COMMA expr)*] CLOSE_BR
 
@@ -18,4 +18,4 @@ expr: term ((PLUS | MINUS) term)*
 
 term: fact ((MUL | DIV) fact)*
 
-fact: [MINUS | PLUS] NUMBER | ID | func_call | OPEN_BR expr CLOSE_BR
+fact: [MINUS | PLUS] (NUMBER | ID | func_call | OPEN_BR expr CLOSE_BR)
