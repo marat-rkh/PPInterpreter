@@ -6,10 +6,10 @@
 #include <string>
 
 class Callable : public Evaluatable {
-public:
+  public:
     Callable(std::string id): id_(id) {}
-    int Evaluate(Scope& scope, const Params &params);
-private:
+    int Evaluate(Scope& scope, Error& error);
+  private:
     std::string id_;
 };
 

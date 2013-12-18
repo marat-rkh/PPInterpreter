@@ -7,7 +7,7 @@ class Number : public Evaluatable {
 public:
     Number(int val): value_(val) {}
     Number(std::string const& num);
-    int Evaluate(Scope &scope, const Params &params);
+    int Evaluate(Scope &scope, Error& error);
 
 private:
     int value_;

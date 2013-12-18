@@ -2,15 +2,13 @@
 
 Term::Term() {}
 
-int Term::Evaluate(Scope &scope, const Params &params) {
+int Term::Evaluate(Scope &scope, Error& error) {
     int result = 1;
     std::string operation = "*";
     operations_.push_back("*");
     for(size_t i = 0; i != elements_.size(); ++i) {
-        int value = elements_[i]->Evaluate(scope, params);
-        if(elements_[i]->ErrorOccured()) {
-            SetErrorFlag(elements_[i]->GetErrorType());
-            SetLineNumber(elements_[i]->GetLineNumber());
+        int value = elements_[i]->Evaluate(scope, error);
+        if(error.IsOccured()) {
             return 0;
         }
         if(operation == "*") {
@@ -18,8 +16,7 @@ int Term::Evaluate(Scope &scope, const Params &params) {
         }
         else {
             if(value == 0) {
-                SetErrorFlag(DIVBYZERO_ER);
-                SetLineNumber(elements_[i]->GetLineNumber());
+                error.Set(Error::DIVBYZERO_ER, elements_[i]->GetLineNumber());
                 return 0;
             }
             result /= value;

@@ -7,10 +7,10 @@
 
 class ArithmExpr : public Evaluatable {
 public:
-    ArithmExpr();
+    ArithmExpr() {}
     void AddOperation(std::string operation) { operations_.push_back(operation); }
     void AddElem(PtrEval elem) { elements_.push_back(elem); }
-    int Evaluate(Scope &scope, const Params &params) = 0;
+    int Evaluate(Scope &scope, Error& error) = 0;
 
 protected:
     std::vector<std::string> operations_;

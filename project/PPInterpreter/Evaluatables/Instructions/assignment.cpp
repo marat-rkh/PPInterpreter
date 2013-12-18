@@ -1,20 +1,19 @@
 #include "assignment.h"
-#include "function.h"
+#include "Evaluatables/function.h"
 #include "number.h"
-#include "returninstr.h"
+#include "Instructions/returninstr.h"
 
-int Assignment::Evaluate(Scope &scope, const Params &params) {
-    int value = expr_->Evaluate(scope, params);
-    if(expr_->ErrorOccured()) {
-        SetErrorFlag(expr_->GetErrorType());
-        SetLineNumber(expr_->GetLineNumber());
+int Assignment::Evaluate(Scope &scope, Error& error) {
+    int value = expr_->Evaluate(scope, error);
+    if(error.IsOccured()) {
         return 0;
     }
     Scope::iterator it = scope.find(id_);
 
     PtrEval number_expr(new Number(value));
     PtrInstr return_instr(new ReturnInstr(number_expr));
-    PtrEval func(new Function(return_instr));
+    InstructionBlock body(return_instr);
+    PtrEval func(new Function(body));
 
     if(it == scope.end()) {
         scope.insert(std::pair<std::string, PtrEval>(id_, func)); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

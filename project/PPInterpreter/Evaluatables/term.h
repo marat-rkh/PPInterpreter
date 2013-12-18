@@ -6,7 +6,7 @@
 class Term : public ArithmExpr {
 public:
     Term();
-    int Evaluate(Scope &scope, const Params &params);
+    int Evaluate(Scope &scope, Error& error);
 };
 
 #endif // TERM_H
