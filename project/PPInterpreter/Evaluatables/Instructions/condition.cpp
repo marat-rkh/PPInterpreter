@@ -27,4 +27,5 @@ int Condition::Evaluate(Scope &scope, Error &error) {
     if(comp_char_ == "!=") {
         return value1 != value2 ? 1 : 0;
     }
+    return 0;
 }

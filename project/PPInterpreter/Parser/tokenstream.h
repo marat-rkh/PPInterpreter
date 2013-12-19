@@ -5,10 +5,7 @@
 #include <string>
 
 #include "token.h"
-
-#define DISABLE_COPY_AND_ASSIGN(TypeName) \
-    TypeName(TypeName const&); \
-    void operator=(TypeName const&)
+#include "defines.h"
 
 using std::vector;
 using std::string;
@@ -40,6 +37,10 @@ public:
 
     void FixPosition() { fixed_pos_ = current_pos_; }
     void RollbackToFixedPosition() { current_pos_ = fixed_pos_; }
+
+    std::string GetCurrentTokenValue() {
+        return tokens_[current_pos_].value_;
+    }
 
 private:
     DISABLE_COPY_AND_ASSIGN(TokenStream);

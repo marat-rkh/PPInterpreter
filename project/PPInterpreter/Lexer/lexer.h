@@ -6,10 +6,7 @@
 #include <fstream>
 
 #include "token.h"
-
-#define DISABLE_COPY_AND_ASSIGN(TypeName) \
-    TypeName(TypeName const&); \
-    void operator=(TypeName const&)
+#include "defines.h"
 
 using std::string;
 using std::fstream;

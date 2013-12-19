@@ -1,6 +1,8 @@
 #include "parser.h"
 #include "lexer.h"
 
+#include "Creators/funccreator.h"
+
 size_t Parser::Parse() {
     while(!tokens_.End()) {
         ParsingResult stmt_res = ParseStmt();
@@ -15,7 +17,8 @@ ParsingResult Parser::ParseStmt() {
     if(func_res != NOT_MATCHED) {
         return func_res == CORRECT ? CORRECT : INCORRECT;
     }
-    ParsingResult instr_res = ParseInstruction();
+    InstructionBlock body;      //!!!!!!!!!!!!!!!------------------!!!!!!!!!!!!!!!!!!!!!!
+    ParsingResult instr_res = ParseInstruction(body);
     if(instr_res != NOT_MATCHED) {
         return instr_res == CORRECT ? CORRECT : INCORRECT;
     }
@@ -26,75 +29,86 @@ ParsingResult Parser::ParseFuncDecl() {
     if(!tokens_.CompareValueWithRollback(KEYWORDS[0])) {
         return NOT_MATCHED;
     }
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncDeclParams);
+    FuncCreator func_creator;
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncDeclParams, func_creator);
     if(func_res != CORRECT) { return INCORRECT; }
-    if(!CheckBlock()) { return INCORRECT; }
+    InstructionBlock body;
+    if(!CheckBlock(body)) { return INCORRECT; }
+    func_creator.CreateWithBody(body);
     return CORRECT;
 }
 
-ParsingResult Parser::ParseFuncHeader(CheckerFunc ParamsChecker) {
+template<class T>
+ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(T&), T& creator) {
     tokens_.FixPosition();
     if(!tokens_.CompareTypeWithRollback(ID)) { return NOT_MATCHED; }
+    creator.SetID(tokens_.GetCurrentTokenValue());
     if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) {
         tokens_.RollbackToFixedPosition();
         return NOT_MATCHED;
     }
-    if(!(this->*ParamsChecker)() ||
+    if(!(this->*ParamsChecker)(creator) ||
        !tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE)) { return INCORRECT; }
     return CORRECT;
 }
 
-bool Parser::CheckFuncDeclParams() {
+bool Parser::CheckFuncDeclParams(FuncCreator& creator) {
     if(!tokens_.CompareTypeWithRollback(ID)) { return true; }
-    return CheckFuncDeclParamsLoop() ? true : false;
+    creator.AddParam(tokens_.GetCurrentTokenValue());
+    return CheckFuncDeclParamsLoop(creator) ? true : false;
 }
 
-bool Parser::CheckFuncDeclParamsLoop() {
+bool Parser::CheckFuncDeclParamsLoop(FuncCreator& creator) {
     if(!tokens_.CompareTypeWithRollback(COMMA)) { return true; }
     else if(!tokens_.NextTokenTypeEqualsTo(ID)) { return false; }
-    return CheckFuncDeclParamsLoop();
+    creator.AddParam(tokens_.GetCurrentTokenValue());
+    return CheckFuncDeclParamsLoop(creator);
 }
 
-bool Parser::CheckFuncCallParams() {
+bool Parser::CheckFuncCallParams(FuncCallCreator& creator) {
+    Expr expr; // !!!!!!!!!!!!!!!!!!!!!--------------create expression-------------------!!!!!!!!!!!!!!!
     ParsingResult expr_res = ParseExpr();
     if(expr_res != CORRECT) {
         return expr_res == NOT_MATCHED;
     }
-    return CheckFuncCallParamsLoop() ? true : false;
+    creator.AddParam(expr);
+    return CheckFuncCallParamsLoop(creator) ? true : false;
 }
 
-bool Parser::CheckFuncCallParamsLoop() {
+bool Parser::CheckFuncCallParamsLoop(FuncCallCreator& creator) {
     if(!tokens_.CompareTypeWithRollback(COMMA)) { return true; }
     else {
+        Expr expr; // !!!!!!!!!!!!!!!!!!!!!--------------create expression-------------------!!!!!!!!!!!!!!!
         ParsingResult expr_res = ParseExpr();
         if(expr_res != CORRECT) { return false; }
+        creator.AddParam(expr);
     }
-    return CheckFuncCallParamsLoop();
+    return CheckFuncCallParamsLoop(creator);
 }
 
-bool Parser::CheckBlock() {
+bool Parser::CheckBlock(InstructionBlock& body) {
     if(!tokens_.NextTokenTypeEqualsTo(COLUMN) ||
        !tokens_.NextTokenTypeEqualsTo(NEWLINE))
     {
         return false;
     }
     ++current_line_;
-    return CheckBlockBody();
+    return CheckBlockBody(body);
 }
 
-bool Parser::CheckBlockBody() {
-    ParsingResult instr_res = ParseInstruction();
+bool Parser::CheckBlockBody(InstructionBlock& body) {
+    ParsingResult instr_res = ParseInstruction(body);
     if(instr_res == INCORRECT) { return false; }
     if(!tokens_.CompareTypeWithRollback(NEWLINE)) {
        if(instr_res == CORRECT) { return false; }
        return tokens_.NextTokenValueEqualsTo(KEYWORDS[1]);
     }
     ++current_line_;
-    return CheckBlockBody();
+    return CheckBlockBody(body);
 }
 
-ParsingResult Parser::ParseInstruction() {
-    ParsingResult io_res = ParseIOInstr();
+ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
+    ParsingResult io_res = ParseIOInstr(body);
     if(io_res != NOT_MATCHED) {
         return io_res == CORRECT ? CORRECT : INCORRECT;
     }
@@ -106,7 +120,8 @@ ParsingResult Parser::ParseInstruction() {
     if(assign_res != NOT_MATCHED) {
         return assign_res == CORRECT ? CORRECT : INCORRECT;
     }
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams);
+    FuncCallCreator func_call_creator;
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
     if(func_res != NOT_MATCHED) {
         return func_res == CORRECT ? CORRECT : INCORRECT;
     }
@@ -117,7 +132,8 @@ ParsingResult Parser::ParseInstruction() {
     return NOT_MATCHED;
 }
 
-ParsingResult Parser::ParseIOInstr() {
+ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
+
     if(tokens_.CompareValueWithRollback(KEYWORDS[6])) {
         return tokens_.CompareTypeWithRollback(ID) ? CORRECT : INCORRECT;
     }
@@ -137,9 +153,10 @@ ParsingResult Parser::ParseControlFlowInstr() {
     if(expr_res == INCORRECT || expr_res == NOT_MATCHED) { return INCORRECT; }
     if(!tokens_.NextTokenTypeEqualsTo(COMPARISON_CHAR)) { return INCORRECT; }
     expr_res = ParseExpr();
+    InstructionBlock tmp_bl;
     if(expr_res == INCORRECT ||
        expr_res == NOT_MATCHED ||
-       !CheckBlock())
+       !CheckBlock(tmp_bl))
     {
         return INCORRECT;
     }
@@ -213,7 +230,8 @@ ParsingResult Parser::ParseFactor() {
     if(tokens_.CompareTypeWithRollback(MINUS_OP)) { /*code to add minus to number*/ }
     if(tokens_.CompareTypeWithRollback(PLUS_OP)) { /*code to add plus to number*/ }
     if(tokens_.CompareTypeWithRollback(NUMBER)) { return CORRECT; }
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams);
+    FuncCallCreator func_call_creator;
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
     if(func_res != NOT_MATCHED) {
         return func_res == CORRECT ? CORRECT : INCORRECT;
     }

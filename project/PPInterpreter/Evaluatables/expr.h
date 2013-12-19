@@ -6,11 +6,7 @@
 class Expr : public ArithmExpr {
 public:
     Expr() {}
-    Expr(Expr const& e):
-        operations_(e.operations_),
-        elements_(e.elements_),
-        line_number_(e.line_number_)
-    {}
+    Expr(Expr const& e): ArithmExpr(e) {}
 
     int Evaluate(Scope &scope, Error& error);
 };

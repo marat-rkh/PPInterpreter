@@ -2,10 +2,11 @@
 #define GLOBALSCOPE_H
 
 #include "Evaluatables/evaluatable.h"
+#include "defines.h"
+#include "function.h"
 
-#define DISABLE_COPY_AND_ASSIGN(Type) \
-    Type(Type const&); \
-    void operator=(Type const&)
+typedef std::shared_ptr<Function> PtrFunc;
+typedef std::map<std::string, PtrFunc> GSFuncs;
 
 class GlobalScope {
 public:
@@ -13,10 +14,10 @@ public:
         static GlobalScope global_scope;
         return global_scope;
     }
-    Scope scope_map;
+    GSFuncs gs_funcs;
 
 private:
-    GlobalScope(): scope_map() {}
+    GlobalScope(): gs_funcs() {}
     DISABLE_COPY_AND_ASSIGN(GlobalScope);
 };
 

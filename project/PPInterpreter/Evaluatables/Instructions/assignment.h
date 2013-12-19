@@ -1,9 +1,9 @@
 #ifndef ASSIGNMENT_H
 #define ASSIGNMENT_H
 
-#include "Instructions/instruction.h"
+#include "Evaluatables/evaluatable.h"
 
-class Assignment : public Instruction {
+class Assignment : public Evaluatable {
   public:
     Assignment(std::string id, PtrEval expr) : id_(id), expr_(expr) {}
     int Evaluate(Scope &scope, Error& error);

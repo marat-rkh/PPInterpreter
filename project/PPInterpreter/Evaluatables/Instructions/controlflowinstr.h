@@ -14,7 +14,7 @@ class ControlFlowInstr : public Evaluatable {
     {}
     int Evaluate(Scope &scope, Error &error) = 0;
 
-  private:
+  protected:
     Condition condition_;
     InstructionBlock body_;
     InstructionBlock* parent_;

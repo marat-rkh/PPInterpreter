@@ -7,13 +7,13 @@
 
 class InstructionBlock : public Evaluatable {
   public:
-    InstructionBlock(): has_returned_(false) {}
+    InstructionBlock():  Evaluatable(), has_returned_(false) {}
     InstructionBlock(PtrEval const& instr): has_returned_(false) {
         AddInstruction(instr);
     }
     InstructionBlock(InstructionBlock const& instr_block):
-        instructions_(instr_block.instructions_),
-        line_number_(instr_block.line_number_)
+        Evaluatable(instr_block),
+        instructions_(instr_block.instructions_)
     {}
     void AddInstruction(PtrEval instr) {
         instructions_.push_back(instr);

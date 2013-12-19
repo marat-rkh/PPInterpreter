@@ -2,22 +2,14 @@
 #define PARSER_H
 
 #include <vector>
-
-#include "token.h"
-#include "tokenstream.h"
-#include "program.h"
-
-#include "evaluatable.h"
-#include "function.h"
-#include "instruction.h"
-#include "returninstr.h"
-#include "printinstr.h"
-
 #include <memory>
 
-#define DISABLE_COPY_AND_ASSIGN(TypeName) \
-    TypeName(TypeName const&); \
-    void operator=(TypeName const&)
+#include "Lexer/token.h"
+#include "Parser/tokenstream.h"
+#include "Evaluatables/program.h"
+#include "defines.h"
+#include "Creators/funccreator.h"
+#include "Creators/funccallcreator.h"
 
 using std::vector;
 
@@ -27,8 +19,7 @@ class Parser {
 public:
     Parser(vector<Token> const& tokens):
         tokens_(tokens),
-        current_line_(1),
-        program_()
+        current_line_(1)
     {}
     size_t Parse();
 
@@ -36,20 +27,20 @@ private:
     DISABLE_COPY_AND_ASSIGN(Parser);
 
     ParsingResult ParseStmt();
-
-    typedef bool (Parser::*CheckerFunc)();
     ParsingResult ParseFuncDecl();
-    ParsingResult ParseFuncHeader(CheckerFunc checker_func);
 
-    bool CheckFuncDeclParams();
-    bool CheckFuncDeclParamsLoop();
-    bool CheckFuncCallParams();
-    bool CheckFuncCallParamsLoop();
-    bool CheckBlock();
-    bool CheckBlockBody();
+    template<class T>
+    ParsingResult ParseFuncHeader(bool (Parser::*CheckerFunc)(T&), T& creator);
 
-    ParsingResult ParseInstruction();
-    ParsingResult ParseIOInstr();
+    bool CheckFuncDeclParams(FuncCreator& creator);
+    bool CheckFuncDeclParamsLoop(FuncCreator& creator);
+    bool CheckFuncCallParams(FuncCallCreator& creator);
+    bool CheckFuncCallParamsLoop(FuncCallCreator& creator);
+    bool CheckBlock(InstructionBlock& body);
+    bool CheckBlockBody(InstructionBlock& body);
+
+    ParsingResult ParseInstruction(InstructionBlock& body);
+    ParsingResult ParseIOInstr(InstructionBlock& body);
     ParsingResult ParseControlFlowInstr();
     ParsingResult ParseAssignment();
     ParsingResult ParseReturnExpr();

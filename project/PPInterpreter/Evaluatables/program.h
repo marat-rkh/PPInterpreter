@@ -13,18 +13,14 @@ using std::string;
 
 class Program : public Evaluatable {
   public:
-    Program();
+    Program(): body_(), variables_() {}
     void SetBody(InstructionBlock const& instr_block) {
         body_ = instr_block;
-    }
-    void AddFunc(std::string id, PtrEval func) {
-        GlobalScope.GetInstance().scope_map.insert(std::pair<std::string, PtrEval>(id, func));
     }
     int Evaluate(Scope &scope, Error& error) {
         body_.Evaluate(scope, error);
         return 0;
     }
-
   private:
     InstructionBlock body_;
     Scope variables_;

@@ -5,6 +5,8 @@
 #include "lexer.h"
 #include "parser.h"
 
+#include "globalscope.h"
+
 using namespace std;
 
 void PrintTokens(vector<Token>& tokens);
@@ -33,6 +35,10 @@ int main() {
     }
     else {
         cout << "Parsing successfuly proceeded! = )" << endl;
+    }
+    GSFuncs gs = GlobalScope::GetInstance().gs_funcs;
+    for(GSFuncs::iterator it = gs.begin(); it != gs.end(); ++it) {
+        cout << it->first << endl;
     }
     return 0;
 }

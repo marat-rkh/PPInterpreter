@@ -1,16 +1,18 @@
 #ifndef CALLABLE_H
 #define CALLABLE_H
 
-#include "evaluatable.h"
+#include "Evaluatables/evaluatable.h"
 
 #include <string>
 
 class Callable : public Evaluatable {
   public:
-    Callable(std::string id): id_(id) {}
-    int Evaluate(Scope& scope, Error& error);
-  private:
-    std::string id_;
+    Callable() {}
+//    PtrEval TryFindEvaluatable(Scope& scope, std::string id) {
+//        Scope::iterator it = scope.find(id);
+//        return it == scope.end() ? 0 : it->second;
+//    }
+//    int Evaluate(Scope& scope, Error& error) = 0;
 };
 
 #endif // CALLABLE_H

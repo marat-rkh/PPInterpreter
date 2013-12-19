@@ -16,6 +16,7 @@ typedef std::map<std::string, PtrEval> Scope;
 class Evaluatable {
 public:
     Evaluatable(): line_number_(0) {}
+    Evaluatable(Evaluatable const& e): line_number_(e.line_number_) {}
     void SetLineNumber(size_t line) { line_number_ = line; }
     size_t GetLineNumber() { return line_number_; }
 

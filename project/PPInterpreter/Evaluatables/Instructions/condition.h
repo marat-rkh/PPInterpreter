@@ -12,10 +12,10 @@ class Condition : public Evaluatable {
         comp_char_(comp_char)
     {}
     Condition(Condition const& c):
+        Evaluatable(c),
         e1_(c.e1_),
         e2_(c.e2_),
-        comp_char_(c.comp_char_),
-        line_number_(c.line_number_)
+        comp_char_(c.comp_char_)
     {}
     int Evaluate(Scope &scope, Error &error);
 
