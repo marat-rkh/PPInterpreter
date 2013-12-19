@@ -11,14 +11,16 @@ using std::vector;
 using std::map;
 using std::string;
 
-class Program : public Evaluatable {
+class Program {
   public:
-    Program(): body_(), variables_() {}
+    Program() {}
+    Program(InstructionBlock const& ib): body_(ib), variables_() {}
+    Program(Program const& pr): body_(pr.body_), variables_(pr.variables_) {}
     void SetBody(InstructionBlock const& instr_block) {
         body_ = instr_block;
     }
-    int Evaluate(Scope &scope, Error& error) {
-        body_.Evaluate(scope, error);
+    int Evaluate(Error& error) {
+        body_.Evaluate(variables_, error);
         return 0;
     }
   private:

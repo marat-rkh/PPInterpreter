@@ -6,10 +6,13 @@
 
 #include "Lexer/token.h"
 #include "Parser/tokenstream.h"
-#include "Evaluatables/program.h"
 #include "defines.h"
+#include "program.h"
+#include "error.h"
 #include "Creators/funccreator.h"
 #include "Creators/funccallcreator.h"
+#include "expr.h"
+#include "term.h"
 
 using std::vector;
 
@@ -21,12 +24,12 @@ public:
         tokens_(tokens),
         current_line_(1)
     {}
-    size_t Parse();
+    Program Parse(Error& error);
 
 private:
     DISABLE_COPY_AND_ASSIGN(Parser);
 
-    ParsingResult ParseStmt();
+    ParsingResult ParseStmt(InstructionBlock& program_body);
     ParsingResult ParseFuncDecl();
 
     template<class T>
@@ -45,15 +48,14 @@ private:
     ParsingResult ParseAssignment();
     ParsingResult ParseReturnExpr();
 
-    ParsingResult ParseExpr();
-    bool CheckExprLoop();
-    ParsingResult ParseTerm();
-    bool CheckTermLoop();
-    ParsingResult ParseFactor();
+    ParsingResult ParseExpr(Expr& expr);
+    bool CheckExprLoop(Expr& expr);
+    ParsingResult ParseTerm(Term& term);
+    bool CheckTermLoop(Term& term);
+    ParsingResult ParseFactor(Term& term);
 
     TokenStream tokens_;
     size_t current_line_;
-    Program program_;
 };
 
 #endif // PARSER_H

@@ -12,6 +12,11 @@ class FuncCall : public Evaluatable {
         id_(id),
         params_(params)
     {}
+    FuncCall(FuncCall const& fc):
+        Evaluatable(fc),
+        id_(fc.id_),
+        params_(fc.params_)
+    {}
     int Evaluate(Scope &scope, Error &error);
 
   private:

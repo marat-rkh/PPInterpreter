@@ -1,24 +1,31 @@
 #include "parser.h"
 #include "lexer.h"
 
+#include "program.h"
 #include "Creators/funccreator.h"
+#include "printinstr.h"
+#include "number.h"
+#include "variable.h"
 
-size_t Parser::Parse() {
+Program Parser::Parse(Error& error) {
+    InstructionBlock program_body;
     while(!tokens_.End()) {
-        ParsingResult stmt_res = ParseStmt();
-        if(stmt_res == INCORRECT || !tokens_.NextTokenTypeEqualsTo(NEWLINE)) { return current_line_; }
+        ParsingResult stmt_res = ParseStmt(program_body);
+        if(stmt_res == INCORRECT || !tokens_.NextTokenTypeEqualsTo(NEWLINE)) {
+            error.Set(Error::SYNTAX_ER, current_line_);
+            return Program();
+        }
         ++current_line_;
     }
-    return 0;
+    return Program(program_body);
 }
 
-ParsingResult Parser::ParseStmt() {
+ParsingResult Parser::ParseStmt(InstructionBlock& program_body) {
     ParsingResult func_res = ParseFuncDecl();
     if(func_res != NOT_MATCHED) {
         return func_res == CORRECT ? CORRECT : INCORRECT;
     }
-    InstructionBlock body;      //!!!!!!!!!!!!!!!------------------!!!!!!!!!!!!!!!!!!!!!!
-    ParsingResult instr_res = ParseInstruction(body);
+    ParsingResult instr_res = ParseInstruction(program_body);
     if(instr_res != NOT_MATCHED) {
         return instr_res == CORRECT ? CORRECT : INCORRECT;
     }
@@ -66,8 +73,8 @@ bool Parser::CheckFuncDeclParamsLoop(FuncCreator& creator) {
 }
 
 bool Parser::CheckFuncCallParams(FuncCallCreator& creator) {
-    Expr expr; // !!!!!!!!!!!!!!!!!!!!!--------------create expression-------------------!!!!!!!!!!!!!!!
-    ParsingResult expr_res = ParseExpr();
+    Expr expr;
+    ParsingResult expr_res = ParseExpr(expr);
     if(expr_res != CORRECT) {
         return expr_res == NOT_MATCHED;
     }
@@ -78,8 +85,8 @@ bool Parser::CheckFuncCallParams(FuncCallCreator& creator) {
 bool Parser::CheckFuncCallParamsLoop(FuncCallCreator& creator) {
     if(!tokens_.CompareTypeWithRollback(COMMA)) { return true; }
     else {
-        Expr expr; // !!!!!!!!!!!!!!!!!!!!!--------------create expression-------------------!!!!!!!!!!!!!!!
-        ParsingResult expr_res = ParseExpr();
+        Expr expr;
+        ParsingResult expr_res = ParseExpr(expr);
         if(expr_res != CORRECT) { return false; }
         creator.AddParam(expr);
     }
@@ -123,7 +130,9 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
     FuncCallCreator func_call_creator;
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
     if(func_res != NOT_MATCHED) {
-        return func_res == CORRECT ? CORRECT : INCORRECT;
+        if(func_res == INCORRECT) { return INCORRECT; }
+        body.AddInstruction(PtrEval(new FuncCall(func_call_creator.Create())));
+        return CORRECT;
     }
     ParsingResult return_expr_res = ParseReturnExpr();
     if(return_expr_res != NOT_MATCHED) {
@@ -133,12 +142,14 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
 }
 
 ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
-
     if(tokens_.CompareValueWithRollback(KEYWORDS[6])) {
         return tokens_.CompareTypeWithRollback(ID) ? CORRECT : INCORRECT;
     }
     if(tokens_.CompareValueWithRollback(KEYWORDS[5])) {
-        return ParseExpr() == CORRECT ? CORRECT : INCORRECT;
+        Expr expr;
+        if(ParseExpr(expr) != CORRECT) { return INCORRECT; }
+        body.AddInstruction(PtrEval(new PrintInstr(expr)));
+        return CORRECT;
     }
     return NOT_MATCHED;
 }
@@ -149,10 +160,12 @@ ParsingResult Parser::ParseControlFlowInstr() {
     {
         return NOT_MATCHED;
     }
-    ParsingResult expr_res = ParseExpr();
+    Expr left_expr;
+    ParsingResult expr_res = ParseExpr(left_expr);
     if(expr_res == INCORRECT || expr_res == NOT_MATCHED) { return INCORRECT; }
     if(!tokens_.NextTokenTypeEqualsTo(COMPARISON_CHAR)) { return INCORRECT; }
-    expr_res = ParseExpr();
+    Expr right_expr;
+    expr_res = ParseExpr(right_expr);
     InstructionBlock tmp_bl;
     if(expr_res == INCORRECT ||
        expr_res == NOT_MATCHED ||
@@ -170,13 +183,15 @@ ParsingResult Parser::ParseAssignment() {
         tokens_.RollbackToFixedPosition();
         return NOT_MATCHED;
     }
-    ParsingResult expr_res = ParseExpr();
+    Expr expr;
+    ParsingResult expr_res = ParseExpr(expr);
     return expr_res == CORRECT ? CORRECT : INCORRECT;
 }
 
 ParsingResult Parser::ParseReturnExpr() {
     if(!tokens_.CompareValueWithRollback(KEYWORDS[4])) { return NOT_MATCHED; }
-    ParsingResult expr_res = ParseExpr();
+    Expr expr;
+    ParsingResult expr_res = ParseExpr(expr);
     if(expr_res != NOT_MATCHED) {
         return expr_res == CORRECT ? CORRECT : INCORRECT;
     }
@@ -188,118 +203,72 @@ ParsingResult Parser::ParseReturnExpr() {
     return CORRECT;
 }
 
-ParsingResult Parser::ParseExpr() {
-    ParsingResult term_res = ParseTerm();
+ParsingResult Parser::ParseExpr(Expr& expr) {
+    Term term;
+    ParsingResult term_res = ParseTerm(term);
     if(term_res != CORRECT) {
         return term_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
     }
-    return CheckExprLoop() ? CORRECT : INCORRECT;
+    expr.AddTerm(term);
+    return CheckExprLoop(expr) ? CORRECT : INCORRECT;
 }
 
-bool Parser::CheckExprLoop() {
+bool Parser::CheckExprLoop(Expr& expr) {
     if(!tokens_.CompareTypeWithRollback(PLUS_OP) &&
        !tokens_.CompareTypeWithRollback(MINUS_OP))
     {
         return true;
     }
-    ParsingResult term_res = ParseTerm();
+    expr.AddOperation(tokens_.GetCurrentTokenValue());
+    Term term;
+    ParsingResult term_res = ParseTerm(term);
     if(term_res != CORRECT) { return false; }
-    return CheckExprLoop();
+    expr.AddTerm(term);
+    return CheckExprLoop(expr);
 }
 
-ParsingResult Parser::ParseTerm() {
-    ParsingResult fact_res = ParseFactor();
+ParsingResult Parser::ParseTerm(Term& term) {
+    ParsingResult fact_res = ParseFactor(term);
     if(fact_res != CORRECT) {
         return fact_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
     }
-    return CheckTermLoop() ? CORRECT : INCORRECT;
+    return CheckTermLoop(term) ? CORRECT : INCORRECT;
 }
 
-bool Parser::CheckTermLoop() {
+bool Parser::CheckTermLoop(Term& term) {
     if(!tokens_.CompareTypeWithRollback(MUL_OP) &&
        !tokens_.CompareTypeWithRollback(DIV_OP))
     {
         return true;
     }
-    ParsingResult fact_res = ParseFactor();
+    term.AddOperation(tokens_.GetCurrentTokenValue());
+    ParsingResult fact_res = ParseFactor(term);
     if(fact_res != CORRECT) { return false; }
-    return CheckTermLoop();
+    return CheckTermLoop(term);
 }
 
-ParsingResult Parser::ParseFactor() {
+ParsingResult Parser::ParseFactor(Term& term) {
     if(tokens_.CompareTypeWithRollback(MINUS_OP)) { /*code to add minus to number*/ }
     if(tokens_.CompareTypeWithRollback(PLUS_OP)) { /*code to add plus to number*/ }
-    if(tokens_.CompareTypeWithRollback(NUMBER)) { return CORRECT; }
+    if(tokens_.CompareTypeWithRollback(NUMBER)) {
+        term.AddElem(PtrEval(new Number(tokens_.GetCurrentTokenValue())));
+        return CORRECT;
+    }
     FuncCallCreator func_call_creator;
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
     if(func_res != NOT_MATCHED) {
-        return func_res == CORRECT ? CORRECT : INCORRECT;
+        if(func_res != CORRECT) { return INCORRECT; }
+        term.AddElem(PtrEval(new FuncCall(func_call_creator.Create())));
+        return CORRECT;
     }
-    if(tokens_.CompareTypeWithRollback(ID)) { return CORRECT; }
+    if(tokens_.CompareTypeWithRollback(ID)) {
+        term.AddElem(PtrEval(new Variable(tokens_.GetCurrentTokenValue())));
+        return CORRECT;
+    }
     if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }
-    ParsingResult expr_res = ParseExpr();
-    if(expr_res != CORRECT) {
-        return INCORRECT;
-    }
+    Expr expr;
+    ParsingResult expr_res = ParseExpr(expr);
+    if(expr_res != CORRECT) { return INCORRECT; }
+    term.AddElem(PtrEval(new Expr(expr)));
     return tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE) ? CORRECT : INCORRECT;
 }
-
-//ParsingResult Parser::ParseArithmExpr(int& i) {
-//    ParsingResult term_res = ParseTerm(i);
-//    if(term_res != CORRECT) {
-//        return term_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
-//    }
-//    return CheckArithmExprLoop(i) ? CORRECT : INCORRECT;
-//}
-
-//bool Parser::CheckArithmExprLoop(int& i) {
-//    if(!tokens_.CompareTypeWithRollback(PLUS_OP) &&
-//       !tokens_.CompareTypeWithRollback(MINUS_OP))
-//    {
-//        return true;
-//    }
-//    int res = 0;
-//    ParsingResult term_res = ParseTerm(res);
-//    if(term_res != CORRECT) { return false; }
-//    i += res;
-//    return CheckArithmExprLoop(i);
-//}
-
-//ParsingResult Parser::ParseTerm(int& i) {
-//    ParsingResult fact_res = ParseFactor(i);
-//    if(fact_res != CORRECT) {
-//        return fact_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
-//    }
-//    return CheckTermLoop(i) ? CORRECT : INCORRECT;
-//}
-
-//bool Parser::CheckTermLoop(int& i) {
-//    if(!tokens_.CompareTypeWithRollback(MUL_OP) &&
-//       !tokens_.CompareTypeWithRollback(DIV_OP))
-//    {
-//        return true;
-//    }
-//    int res = 0;
-//    ParsingResult fact_res = ParseFactor(res);
-//    if(fact_res != CORRECT) { return false; }
-//    i *= res;
-//    return CheckTermLoop(i);
-//}
-
-//ParsingResult Parser::ParseFactor(int& i) {
-//    if(tokens_.CompareTypeWithRollback(NUMBER)) {
-//        i = atoi(tokens_.val().c_str());
-//        return CORRECT; }
-//    ParsingResult func_call_res = ParseFuncCall();
-//    if(func_call_res != NOT_MATCHED) {
-//        return func_call_res == CORRECT ? CORRECT : INCORRECT;
-//    }
-//    if(tokens_.CompareTypeWithRollback(ID)) { return CORRECT; }
-//    if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }
-//    ParsingResult arithm_expr_res = ParseArithmExpr(i);
-//    if(arithm_expr_res != CORRECT) {
-//        return INCORRECT;
-//    }
-//    return tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE) ? CORRECT : INCORRECT;
-//}
-

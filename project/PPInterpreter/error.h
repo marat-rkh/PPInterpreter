@@ -2,6 +2,7 @@
 #define ERROR_H
 
 #include <cstdlib>
+#include <string>
 
 class Error {
 public:
@@ -10,12 +11,8 @@ public:
     Error() : last_error_type_(NOERRORS), last_error_line_(0) {}
     bool IsOccured() { return last_error_type_ != NOERRORS; }
     ErrorType GetErrorType() { return last_error_type_; }
-    void Set(ErrorType error_type, size_t line_number) {
-        if(last_error_type_ == NOERRORS) {
-            last_error_type_ = error_type;
-            last_error_line_ = line_number;
-        }
-    }
+    void Set(ErrorType error_type, size_t line_number);
+    std::string GetErrorMessage();
 
 private:
     ErrorType last_error_type_;
