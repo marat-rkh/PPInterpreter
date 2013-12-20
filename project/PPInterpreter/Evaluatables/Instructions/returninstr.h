@@ -1,23 +1,24 @@
 #ifndef RETURNINSTR_H
 #define RETURNINSTR_H
 
-#include "Evaluatables/evaluatable.h"
+#include "visitable.h"
+#include "Evaluator/visitor.h"
 #include "Evaluatables/instructionblock.h"
 #include <iostream>
 
-class ReturnInstr : public Evaluatable {
+class ReturnInstr : public Visitable {
   public:
-    ReturnInstr(PtrEval expr, InstructionBlock* parent) : expr_(expr), parent_(parent) {}
+    ReturnInstr(PtrVisitable expr) : expr_(expr) {}
     ReturnInstr(ReturnInstr const& ri):
-        Evaluatable(ri),
-        expr_(ri.expr_),
-        parent_(ri.parent_)
+        Visitable(ri),
+        expr_(ri.expr_)
     {}
-    int Evaluate(Scope &scope, Error &error);
+    PtrVisitable& expr() { return expr_; }
+
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 
   private:
-    PtrEval expr_;
-    InstructionBlock* parent_;
+    PtrVisitable expr_;
 };
 
 #endif // RETURNINSTR_H

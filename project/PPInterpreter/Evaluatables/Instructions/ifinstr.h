@@ -5,10 +5,10 @@
 
 class IfInstr : public ControlFlowInstr {
   public:
-    IfInstr(Condition const& c, InstructionBlock const& body, InstructionBlock* parent):
-        ControlFlowInstr(c, body, parent)
+    IfInstr(Condition const& c, InstructionBlock const& body):
+        ControlFlowInstr(c, body)
     {}
-    int Evaluate(Scope &scope, Error &error);
+    /*virtual*/int accept(Visitor &v);
 };
 
 #endif // IFINSTR_H

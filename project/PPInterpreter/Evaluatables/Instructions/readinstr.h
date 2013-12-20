@@ -1,15 +1,18 @@
 #ifndef READINSTR_H
 #define READINSTR_H
 
-#include "evaluatable.h"
+#include "visitable.h"
+#include "Evaluator/visitor.h"
 
-class ReadInstr : public Evaluatable {
+class ReadInstr : public Visitable {
 public:
     ReadInstr(std::string id): id_(id) {}
     ReadInstr(ReadInstr const& ri):
-        Evaluatable(ri),
+        Visitable(ri),
         id_(ri.id_) {}
-    int Evaluate(Scope &scope, Error &error);
+    std::string& id() { return id_; }
+
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 
 private:
     std::string id_;

@@ -1,25 +1,30 @@
 #ifndef ARITHMEXPR_H
 #define ARITHMEXPR_H
 
-#include "evaluatable.h"
+#include "visitable.h"
+#include "Evaluator/visitor.h"
 
 #include <vector>
 
-class ArithmExpr : public Evaluatable {
+class ArithmExpr : public Visitable {
   public:
     ArithmExpr() {}
     ArithmExpr(ArithmExpr const& ae):
-        Evaluatable(ae),
+        Visitable(ae),
         operations_(ae.operations_),
         elements_(ae.elements_)
     {}
     void AddOperation(std::string operation) { operations_.push_back(operation); }
-    void AddElem(PtrEval elem) { elements_.push_back(elem); }
-    int Evaluate(Scope &scope, Error& error) = 0;
+    void AddElem(PtrVisitable elem) { elements_.push_back(elem); }
+
+    std::vector<std::string>& operations() { return operations_; }
+    std::vector<PtrVisitable>& elements() { return elements_; }
+
+    int accept(Visitor &v) = 0;
 
   protected:
     std::vector<std::string> operations_;
-    std::vector<PtrEval> elements_;
+    std::vector<PtrVisitable> elements_;
 };
 
 #endif // ARITHMEXPR_H

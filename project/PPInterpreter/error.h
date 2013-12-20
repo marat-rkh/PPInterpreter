@@ -13,6 +13,7 @@ public:
     ErrorType GetErrorType() { return last_error_type_; }
     void Set(ErrorType error_type, size_t line_number);
     std::string GetErrorMessage();
+    size_t last_error_line() { return last_error_line_; }
 
 private:
     ErrorType last_error_type_;

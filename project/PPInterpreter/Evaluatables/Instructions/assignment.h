@@ -1,21 +1,25 @@
 #ifndef ASSIGNMENT_H
 #define ASSIGNMENT_H
 
-#include "Evaluatables/evaluatable.h"
+#include "visitable.h"
+#include "Evaluator/visitor.h"
 
-class Assignment : public Evaluatable {
+class Assignment : public Visitable {
   public:
-    Assignment(std::string id, PtrEval expr) : id_(id), expr_(expr) {}
+    Assignment(std::string id, PtrVisitable expr) : id_(id), expr_(expr) {}
     Assignment(Assignment const& assign):
-        Evaluatable(assign),
+        Visitable(assign),
         id_(assign.id_),
         expr_(assign.expr_)
     {}
-    int Evaluate(Scope &scope, Error& error);
+    std::string& id() { return id_; }
+    PtrVisitable& expr() { return expr_; }
+
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 
   private:
     std::string id_;
-    PtrEval expr_;
+    PtrVisitable expr_;
 };
 
 #endif // ASSIGNMENT_H

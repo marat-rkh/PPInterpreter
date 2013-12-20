@@ -9,10 +9,10 @@ public:
     Expr() {}
     Expr(Expr const& e): ArithmExpr(e) {}
     void AddTerm(Term const& t) {
-        elements_.push_back(PtrEval(new Term(t)));
+        elements_.push_back(PtrVisitable(new Term(t)));
     }
 
-    int Evaluate(Scope &scope, Error& error);
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 };
 
 #endif // EXPR_H

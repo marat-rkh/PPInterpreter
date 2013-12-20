@@ -12,7 +12,3 @@ Number::Number(std::string const& num) {
     std::string substring = num.substr(first_num_position, num.size());
     value_ *= atoi(substring.c_str());
 }
-
-int Number::Evaluate(Scope &scope, Error& error) {
-    return value_;
-}

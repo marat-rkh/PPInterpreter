@@ -7,6 +7,7 @@
 
 #include "globalscope.h"
 #include "program.h"
+#include "Evaluator/evaluator.h"
 #include "error.h"
 
 using namespace std;
@@ -82,9 +83,14 @@ void TestEvaluation(std::string test_file) {
     Parser parser(lexer.tokens());
     Error error;
     Program program(parser.Parse(error));
-    program.Evaluate(error);
     if(error.IsOccured()) {
         cout << error.GetErrorMessage() << endl;
+        return;
+    }
+    Evaluator eva;
+    program.accept(eva);
+    if(program.RuntimeErrorIsOccured()) {
+        cout << program.GetErrorMessage() << endl;
         return;
     }
     cout << endl << "Evaluation test successfully completed" << endl;

@@ -3,12 +3,12 @@
 
 #include "controlflowinstr.h"
 
-class WhileInstr : public ControlFlowInstr {
+class WhileInstr: public ControlFlowInstr {
   public:
-    WhileInstr(Condition const& c, InstructionBlock const& body, InstructionBlock* parent):
-        ControlFlowInstr(c, body, parent)
+    WhileInstr(Condition const& c, InstructionBlock const& body):
+        ControlFlowInstr(c, body)
     {}
-    int Evaluate(Scope &scope, Error &error);
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 };
 
 #endif // WHILEINSTR_H

@@ -1,12 +1,13 @@
 #ifndef FUNCTION_H
 #define FUNCTION_H
 
-#include "evaluatable.h"
+#include "visitable.h"
+#include "Evaluator/visitor.h"
 #include "instructionblock.h"
 
 #include <vector>
 
-class Function : public Evaluatable {
+class Function : public Visitable {
   public:
     Function() : params_(), body_(), local_scope_() {}
     Function(InstructionBlock const& instr_block, std::vector<std::string> const& params):
@@ -20,10 +21,10 @@ class Function : public Evaluatable {
     void SetBody(InstructionBlock const& instr_block) {
         body_ = instr_block;
     }
-    std::vector<std::string>& GetParams() {
-        return params_;
-    }
-    int Evaluate(Scope &scope, Error& error);
+    std::vector<std::string>& params() { return params_; }
+    InstructionBlock& body() { return body_; }
+
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 
   private:
     std::vector<std::string> params_;

@@ -9,7 +9,7 @@
 
 class FuncCallCreator {
 public:
-    FuncCallCreator();
+    FuncCallCreator() {}
     void SetID(std::string id) { id_ = id; }
     void AddParam(Expr const& expr) { params_.push_back(expr); }
     FuncCall Create() { return FuncCall(id_, params_); }

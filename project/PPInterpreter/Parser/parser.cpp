@@ -134,7 +134,7 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
     if(func_res != NOT_MATCHED) {
         if(func_res == INCORRECT) { return INCORRECT; }
-        body.AddInstruction(PtrEval(new FuncCall(func_call_creator.Create())));
+        body.AddInstruction(PtrVisitable(new FuncCall(func_call_creator.Create())));
         return CORRECT;
     }
     ParsingResult return_expr_res = ParseReturnExpr(body);
@@ -147,12 +147,12 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
 ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
     if(tokens_.CompareValueWithRollback(KEYWORDS[6])) {
         if(!tokens_.CompareTypeWithRollback(ID)) { return INCORRECT; }
-        body.AddInstruction(PtrEval(new ReadInstr(tokens_.GetCurrentTokenValue())));
+        body.AddInstruction(PtrVisitable(new ReadInstr(tokens_.GetCurrentTokenValue())));
     }
     if(tokens_.CompareValueWithRollback(KEYWORDS[5])) {
         Expr expr;
         if(ParseExpr(expr) != CORRECT) { return INCORRECT; }
-        body.AddInstruction(PtrEval(new PrintInstr(expr)));
+        body.AddInstruction(PtrVisitable(new PrintInstr(expr)));
         return CORRECT;
     }
     return NOT_MATCHED;
@@ -191,8 +191,8 @@ ParsingResult Parser::ParseAssignment(InstructionBlock& body) {
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr);
     if(expr_res == INCORRECT) { return INCORRECT; }
-    Assignment assign(id, PtrEval(new Expr(expr)));
-    body.AddInstruction(PtrEval(new Assignment(assign)));
+    Assignment assign(id, PtrVisitable(new Expr(expr)));
+    body.AddInstruction(PtrVisitable(new Assignment(assign)));
     return CORRECT;
 }
 
@@ -202,9 +202,8 @@ ParsingResult Parser::ParseReturnExpr(InstructionBlock& body) {
     ParsingResult expr_res = ParseExpr(expr);
     if(expr_res != NOT_MATCHED) {
         if(expr_res == INCORRECT) { return INCORRECT; }
-        InstructionBlock* tmp_ib = &body;
-        ReturnInstr ri(PtrEval(new Expr(expr)), &body);
-        body.AddInstruction(PtrEval(new ReturnInstr(ri)));
+        ReturnInstr ri(PtrVisitable(new Expr(expr)));
+        body.AddInstruction(PtrVisitable(new ReturnInstr(ri)));
         return CORRECT;
     }
     tokens_.FixPosition();
@@ -263,24 +262,24 @@ ParsingResult Parser::ParseFactor(Term& term) {
     if(tokens_.CompareTypeWithRollback(MINUS_OP)) { /*code to add minus to number*/ }
     if(tokens_.CompareTypeWithRollback(PLUS_OP)) { /*code to add plus to number*/ }
     if(tokens_.CompareTypeWithRollback(NUMBER)) {
-        term.AddElem(PtrEval(new Number(tokens_.GetCurrentTokenValue())));
+        term.AddElem(PtrVisitable(new Number(tokens_.GetCurrentTokenValue())));
         return CORRECT;
     }
     FuncCallCreator func_call_creator;
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
     if(func_res != NOT_MATCHED) {
         if(func_res != CORRECT) { return INCORRECT; }
-        term.AddElem(PtrEval(new FuncCall(func_call_creator.Create())));
+        term.AddElem(PtrVisitable(new FuncCall(func_call_creator.Create())));
         return CORRECT;
     }
     if(tokens_.CompareTypeWithRollback(ID)) {
-        term.AddElem(PtrEval(new Variable(tokens_.GetCurrentTokenValue())));
+        term.AddElem(PtrVisitable(new Variable(tokens_.GetCurrentTokenValue())));
         return CORRECT;
     }
     if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr);
     if(expr_res != CORRECT) { return INCORRECT; }
-    term.AddElem(PtrEval(new Expr(expr)));
+    term.AddElem(PtrVisitable(new Expr(expr)));
     return tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE) ? CORRECT : INCORRECT;
 }

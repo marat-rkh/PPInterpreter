@@ -3,20 +3,25 @@
 
 #include <vector>
 
+#include "visitable.h"
+#include "Evaluator/visitor.h"
 #include "expr.h"
 
-class FuncCall : public Evaluatable {
+class FuncCall : public Visitable {
   public:
     FuncCall(std::string& id, std::vector<Expr>& params):
         id_(id),
         params_(params)
     {}
     FuncCall(FuncCall const& fc):
-        Evaluatable(fc),
+        Visitable(fc),
         id_(fc.id_),
         params_(fc.params_)
     {}
-    int Evaluate(Scope &scope, Error &error);
+    std::string& id() { return id_; }
+    std::vector<Expr>& params() { return params_; }
+
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 
   private:
     std::string id_;

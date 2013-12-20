@@ -1,7 +1,6 @@
 #ifndef GLOBALSCOPE_H
 #define GLOBALSCOPE_H
 
-#include "Evaluatables/evaluatable.h"
 #include "defines.h"
 #include "function.h"
 

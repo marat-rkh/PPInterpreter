@@ -5,9 +5,9 @@
 
 class Term : public ArithmExpr {
 public:
-    Term();
+    Term() {}
     Term(Term const& t): ArithmExpr(t) {}
-    int Evaluate(Scope &scope, Error& error);
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 };
 
 #endif // TERM_H
