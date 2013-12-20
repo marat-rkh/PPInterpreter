@@ -12,6 +12,7 @@ class FuncCall;
 class Variable;
 class Expr;
 class Term;
+class Factor;
 class Number;
 class Condition;
 class IfInstr;
@@ -31,6 +32,7 @@ public:
     virtual int visit(Variable *c) = 0;
     virtual int visit(Expr *c) = 0;
     virtual int visit(Term *c) = 0;
+    virtual int visit(Factor *c) = 0;
     virtual int visit(Number *c) = 0;
     virtual int visit(Condition *c) = 0;
     virtual int visit(IfInstr *c) = 0;

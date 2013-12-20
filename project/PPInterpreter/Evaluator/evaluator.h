@@ -36,6 +36,7 @@ public:
     /*virtual*/int visit(Variable *c);
     /*virtual*/int visit(Expr *c);
     /*virtual*/int visit(Term *c);
+    /*virtual*/int visit(Factor *c);
     /*virtual*/int visit(Number *c);
     /*virtual*/int visit(Condition *c);
     /*virtual*/int visit(IfInstr *c);

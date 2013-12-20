@@ -52,7 +52,7 @@ private:
     bool CheckExprLoop(Expr& expr);
     ParsingResult ParseTerm(Term& term);
     bool CheckTermLoop(Term& term);
-    ParsingResult ParseFactor(Term& term);
+    ParsingResult ParseFactor(Factor& term);
 
     TokenStream tokens_;
     size_t current_line_;

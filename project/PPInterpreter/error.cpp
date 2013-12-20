@@ -7,10 +7,12 @@ void Error::Set(ErrorType error_type, size_t line_number) {
     }
 }
 
+void Error::Set(ErrorType error_type, size_t line_number, std::string add_info) {
+    Set(error_type, line_number);
+    additional_info_ = add_info;
+}
+
 std::string Error::GetErrorMessage() {
-    if(last_error_type_ == NOERRORS) {
-        return "No errors occured";
-    }
     std::string prefix = "\nline " + std::to_string(last_error_line_) + ": ";
     switch(last_error_type_)  {
     case SYNTAX_ER:
@@ -18,11 +20,11 @@ std::string Error::GetErrorMessage() {
     case DIVBYZERO_ER:
         return prefix + "division by zero";
     case UNDEFVAR_ER:
-        return prefix + "undefined variable <name>";
+        return prefix + "undefined variable '" + additional_info_ + "'";
     case UNDEFFUNC_ER:
-        return prefix + "undefined function <name>";
+        return prefix + "undefined function '" + additional_info_ + "'";
     case ARGNUMMISMATCH_ER:
-        return prefix + "arguments number mismatch for <name>";
+        return prefix + "arguments number mismatch for '" + additional_info_ + "'";
     }
-    return "";
+    return "No errors occured";
 }

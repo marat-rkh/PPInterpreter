@@ -14,6 +14,7 @@
 #include "whileinstr.h"
 #include "expr.h"
 #include "term.h"
+#include "factor.h"
 #include "number.h"
 
 #include <iostream>
@@ -71,12 +72,12 @@ int Evaluator::visit(Assignment *c) {
 int Evaluator::visit(FuncCall *c) {
     GSFuncs::iterator it = GlobalScope::GetInstance().gs_funcs.find(c->id());
     if(it == GlobalScope::GetInstance().gs_funcs.end()) {
-        error_.Set(Error::UNDEFFUNC_ER, c->line_number());
+        error_.Set(Error::UNDEFFUNC_ER, c->line_number(), c->id());
         return 0;
     }
     std::vector<std::string> params_names((it->second)->params());
     if(params_names.size() != c->params().size()) {
-        error_.Set(Error::ARGNUMMISMATCH_ER, c->line_number());
+        error_.Set(Error::ARGNUMMISMATCH_ER, c->line_number(), c->id());
         return 0;
     }
     Scope local_scope;
@@ -109,7 +110,7 @@ int Evaluator::visit(PrintInstr *c) {
 int Evaluator::visit(ReadInstr *c) {
     Scope::iterator it = scope_stack_.top().find(c->id());
     if(it == scope_stack_.top().end()) {
-        error_.Set(Error::UNDEFVAR_ER, c->line_number());
+        error_.Set(Error::UNDEFVAR_ER, c->line_number(), c->id());
         return 0;
     }
     int input = 0;
@@ -131,7 +132,7 @@ int Evaluator::visit(ReturnInstr *c) {
 int Evaluator::visit(Variable *c) {
     Scope::iterator it = scope_stack_.top().find(c->id());
     if(it == scope_stack_.top().end()) {
-        error_.Set(Error::UNDEFVAR_ER, c->line_number());
+        error_.Set(Error::UNDEFVAR_ER, c->line_number(), c->id());
         return 0;
     }
     int value = (it->second)->accept(*this);
@@ -239,6 +240,17 @@ int Evaluator::visit(Term *c) {
         operation = c->operations()[i];
     }
     return result;
+}
+
+int Evaluator::visit(Factor *c) {
+    int value = c->fact_expr()->accept(*this);
+    if(error_.IsOccured()) {
+        return 0;
+    }
+    if(c->unary_operator() == "-") {
+        return -1 * value;
+    }
+    return value;
 }
 
 int Evaluator::visit(Number *c) {

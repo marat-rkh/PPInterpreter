@@ -7,6 +7,7 @@
 #include "readinstr.h"
 #include "printinstr.h"
 #include "returninstr.h"
+#include "factor.h"
 #include "number.h"
 #include "variable.h"
 #include "ifinstr.h"
@@ -256,10 +257,12 @@ bool Parser::CheckExprLoop(Expr& expr) {
 
 ParsingResult Parser::ParseTerm(Term& term) {
     term.SetLineNumber(current_line_);
-    ParsingResult fact_res = ParseFactor(term);
+    Factor factor;
+    ParsingResult fact_res = ParseFactor(factor);
     if(fact_res != CORRECT) {
         return fact_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
     }
+    term.AddElem(PtrVisitable(new Factor(factor)));
     return CheckTermLoop(term) ? CORRECT : INCORRECT;
 }
 
@@ -270,33 +273,35 @@ bool Parser::CheckTermLoop(Term& term) {
         return true;
     }
     term.AddOperation(tokens_.GetCurrentTokenValue());
-    ParsingResult fact_res = ParseFactor(term);
+    Factor factor;
+    ParsingResult fact_res = ParseFactor(factor);
     if(fact_res != CORRECT) { return false; }
+    term.AddElem(PtrVisitable(new Factor(factor)));
     return CheckTermLoop(term);
 }
 
-ParsingResult Parser::ParseFactor(Term& term) {
-    if(tokens_.CompareTypeWithRollback(MINUS_OP)) { /*code to add minus to number*/ }
-    if(tokens_.CompareTypeWithRollback(PLUS_OP)) { /*code to add plus to number*/ }
+ParsingResult Parser::ParseFactor(Factor& factor) {
+    if(tokens_.CompareTypeWithRollback(MINUS_OP)) { factor.SetUnaryOperator("-"); }
+    if(tokens_.CompareTypeWithRollback(PLUS_OP)) { factor.SetUnaryOperator("+"); }
     if(tokens_.CompareTypeWithRollback(NUMBER)) {
-        term.AddElem(PtrVisitable(new Number(tokens_.GetCurrentTokenValue())));
+        factor.SetFactExpr(PtrVisitable(new Number(tokens_.GetCurrentTokenValue())));
         return CORRECT;
     }
     FuncCallCreator func_call_creator;
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
     if(func_res != NOT_MATCHED) {
         if(func_res != CORRECT) { return INCORRECT; }
-        term.AddElem(PtrVisitable(new FuncCall(func_call_creator.Create())));
+        factor.SetFactExpr(PtrVisitable(new FuncCall(func_call_creator.Create())));
         return CORRECT;
     }
     if(tokens_.CompareTypeWithRollback(ID)) {
-        term.AddElem(PtrVisitable(new Variable(tokens_.GetCurrentTokenValue(), current_line_)));
+        factor.SetFactExpr(PtrVisitable(new Variable(tokens_.GetCurrentTokenValue(), current_line_)));
         return CORRECT;
     }
     if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr);
     if(expr_res != CORRECT) { return INCORRECT; }
-    term.AddElem(PtrVisitable(new Expr(expr)));
+    factor.SetFactExpr(PtrVisitable(new Expr(expr)));
     return tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE) ? CORRECT : INCORRECT;
 }

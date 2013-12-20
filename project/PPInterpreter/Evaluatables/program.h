@@ -25,8 +25,10 @@ class Program: public Visitable {
         body_ = instr_block;
     }
     InstructionBlock& body() { return body_; }
-    void SetError(Error e) { error_.Set(e.GetErrorType(), e.last_error_line()); }
-    bool RuntimeErrorIsOccured() { return error_.GetErrorType() != Error::NOERRORS; }
+    void SetError(Error e) {
+        error_.Set(e.last_error_type(), e.last_error_line(), e.additional_info());
+    }
+    bool RuntimeErrorIsOccured() { return error_.IsOccured(); }
     std::string GetErrorMessage() { return error_.GetErrorMessage(); }
 
     /*virtual*/int accept(Visitor &v) { return v.visit(this); }
