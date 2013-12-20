@@ -10,12 +10,16 @@
 class FuncCallCreator {
 public:
     FuncCallCreator() {}
-    void SetID(std::string id) { id_ = id; }
+    void SetIDAndLine(std::string id, size_t line_num) {
+        id_ = id;
+        line_number_ = line_num;
+    }
     void AddParam(Expr const& expr) { params_.push_back(expr); }
-    FuncCall Create() { return FuncCall(id_, params_); }
+    FuncCall Create() { return FuncCall(id_, params_, line_number_); }
 
 private:
     std::string id_;
+    size_t line_number_;
     std::vector<Expr> params_;
 };
 

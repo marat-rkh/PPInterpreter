@@ -10,16 +10,19 @@
 class FuncCreator {
   public:
     FuncCreator() {}
-    void SetID(std::string id) { id_ = id; }
+    void SetIDAndLine(std::string id, size_t line_num) {
+        id_ = id;
+        line_number_ = line_num;
+    }
     void AddParam(std::string param_name) { params_.push_back(param_name); }
     void CreateWithBody(InstructionBlock const& body) {
-        PtrFunc func(new Function(body, params_));
+        PtrFunc func(new Function(body, params_, line_number_));
         GlobalScope::GetInstance().gs_funcs.insert(std::pair<std::string, PtrFunc> (id_, func));
-// check multiple function declaration!
     }
 
   private:
     std::string id_;
+    size_t line_number_;
     std::vector<std::string> params_;
 };
 

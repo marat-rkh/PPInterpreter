@@ -17,6 +17,7 @@ typedef std::map<std::string, PtrVisitable> Scope;
 class Visitable {
 public:
     Visitable(): line_number_(0) {}
+    Visitable(size_t line_num): line_number_(line_num) {}
     Visitable(Visitable const& e): line_number_(e.line_number_) {}
     void SetLineNumber(size_t line) { line_number_ = line; }
     size_t line_number() { return line_number_; }

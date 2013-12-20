@@ -8,8 +8,13 @@
 class PrintInstr : public Visitable {
   public:
     PrintInstr(): expr_() {}
-    PrintInstr(PtrVisitable expr) : expr_(expr) {}
-    PrintInstr(Expr const& expr): expr_(PtrVisitable(new Expr(expr))) {}
+    PrintInstr(PtrVisitable expr):
+        expr_(expr)
+    {}
+    PrintInstr(Expr const& expr, size_t line_num):
+        Visitable(line_num),
+        expr_(PtrVisitable(new Expr(expr)))
+    {}
     void SetExpr(Expr const& expr) {
         expr_ = PtrVisitable(new Expr(expr));
     }

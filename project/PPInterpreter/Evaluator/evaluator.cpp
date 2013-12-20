@@ -231,7 +231,7 @@ int Evaluator::visit(Term *c) {
         }
         else {
             if(value == 0) {
-                error_.Set(Error::DIVBYZERO_ER, (c->elements()[i])->line_number());
+                error_.Set(Error::DIVBYZERO_ER, c->line_number());
                 return 0;
             }
             result /= value;

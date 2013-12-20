@@ -54,7 +54,7 @@ template<class T>
 ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(T&), T& creator) {
     tokens_.FixPosition();
     if(!tokens_.CompareTypeWithRollback(ID)) { return NOT_MATCHED; }
-    creator.SetID(tokens_.GetCurrentTokenValue());
+    creator.SetIDAndLine(tokens_.GetCurrentTokenValue(), current_line_);
     if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) {
         tokens_.RollbackToFixedPosition();
         return NOT_MATCHED;
@@ -149,12 +149,12 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
 ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
     if(tokens_.CompareValueWithRollback(KEYWORDS[6])) {
         if(!tokens_.CompareTypeWithRollback(ID)) { return INCORRECT; }
-        body.AddInstruction(PtrVisitable(new ReadInstr(tokens_.GetCurrentTokenValue())));
+        body.AddInstruction(PtrVisitable(new ReadInstr(tokens_.GetCurrentTokenValue(), current_line_)));
     }
     if(tokens_.CompareValueWithRollback(KEYWORDS[5])) {
         Expr expr;
         if(ParseExpr(expr) != CORRECT) { return INCORRECT; }
-        body.AddInstruction(PtrVisitable(new PrintInstr(expr)));
+        body.AddInstruction(PtrVisitable(new PrintInstr(expr, current_line_)));
         return CORRECT;
     }
     return NOT_MATCHED;
@@ -206,7 +206,7 @@ ParsingResult Parser::ParseAssignment(InstructionBlock& body) {
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr);
     if(expr_res == INCORRECT) { return INCORRECT; }
-    Assignment assign(id, PtrVisitable(new Expr(expr)));
+    Assignment assign(id, PtrVisitable(new Expr(expr)), current_line_);
     body.AddInstruction(PtrVisitable(new Assignment(assign)));
     return CORRECT;
 }
@@ -230,6 +230,7 @@ ParsingResult Parser::ParseReturnExpr(InstructionBlock& body) {
 }
 
 ParsingResult Parser::ParseExpr(Expr& expr) {
+    expr.SetLineNumber(current_line_);
     Term term;
     ParsingResult term_res = ParseTerm(term);
     if(term_res != CORRECT) {
@@ -254,6 +255,7 @@ bool Parser::CheckExprLoop(Expr& expr) {
 }
 
 ParsingResult Parser::ParseTerm(Term& term) {
+    term.SetLineNumber(current_line_);
     ParsingResult fact_res = ParseFactor(term);
     if(fact_res != CORRECT) {
         return fact_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
@@ -288,7 +290,7 @@ ParsingResult Parser::ParseFactor(Term& term) {
         return CORRECT;
     }
     if(tokens_.CompareTypeWithRollback(ID)) {
-        term.AddElem(PtrVisitable(new Variable(tokens_.GetCurrentTokenValue())));
+        term.AddElem(PtrVisitable(new Variable(tokens_.GetCurrentTokenValue(), current_line_)));
         return CORRECT;
     }
     if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }

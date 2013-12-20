@@ -10,7 +10,8 @@
 class Function : public Visitable {
   public:
     Function() : params_(), body_(), local_scope_() {}
-    Function(InstructionBlock const& instr_block, std::vector<std::string> const& params):
+    Function(InstructionBlock const& instr_block, std::vector<std::string> const& params, size_t line_num):
+        Visitable(line_num),
         params_(params),
         body_(instr_block),
         local_scope_()

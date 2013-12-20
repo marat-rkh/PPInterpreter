@@ -6,7 +6,11 @@
 
 class Assignment : public Visitable {
   public:
-    Assignment(std::string id, PtrVisitable expr) : id_(id), expr_(expr) {}
+    Assignment(std::string id, PtrVisitable expr, size_t line_num):
+        Visitable(line_num),
+        id_(id),
+        expr_(expr)
+    {}
     Assignment(Assignment const& assign):
         Visitable(assign),
         id_(assign.id_),

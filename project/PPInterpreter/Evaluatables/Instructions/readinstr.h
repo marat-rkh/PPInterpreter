@@ -6,7 +6,10 @@
 
 class ReadInstr : public Visitable {
 public:
-    ReadInstr(std::string id): id_(id) {}
+    ReadInstr(std::string id, size_t line_num):
+        Visitable(line_num),
+        id_(id)
+    {}
     ReadInstr(ReadInstr const& ri):
         Visitable(ri),
         id_(ri.id_) {}

@@ -9,7 +9,8 @@
 
 class FuncCall : public Visitable {
   public:
-    FuncCall(std::string& id, std::vector<Expr>& params):
+    FuncCall(std::string& id, std::vector<Expr>& params, size_t line_num):
+        Visitable(line_num),
         id_(id),
         params_(params)
     {}

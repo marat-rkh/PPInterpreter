@@ -6,7 +6,10 @@
 
 class Variable : public Visitable {
   public:
-    Variable(std::string id): id_(id) {}
+    Variable(std::string id, size_t line_num):
+        Visitable(line_num),
+        id_(id)
+    {}
     std::string& id() { return id_; }
 
     /*virtual*/int accept(Visitor &v) { return v.visit(this); }
