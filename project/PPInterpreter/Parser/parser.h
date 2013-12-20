@@ -46,7 +46,7 @@ private:
     ParsingResult ParseIOInstr(InstructionBlock& body);
     ParsingResult ParseControlFlowInstr();
     ParsingResult ParseAssignment(InstructionBlock& body);
-    ParsingResult ParseReturnExpr();
+    ParsingResult ParseReturnExpr(InstructionBlock& body);
 
     ParsingResult ParseExpr(Expr& expr);
     bool CheckExprLoop(Expr& expr);

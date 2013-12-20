@@ -6,6 +6,7 @@
 #include "assignment.h"
 #include "readinstr.h"
 #include "printinstr.h"
+#include "returninstr.h"
 #include "number.h"
 #include "variable.h"
 
@@ -136,7 +137,7 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
         body.AddInstruction(PtrEval(new FuncCall(func_call_creator.Create())));
         return CORRECT;
     }
-    ParsingResult return_expr_res = ParseReturnExpr();
+    ParsingResult return_expr_res = ParseReturnExpr(body);
     if(return_expr_res != NOT_MATCHED) {
         return return_expr_res == CORRECT ? CORRECT : INCORRECT;
     }
@@ -195,12 +196,16 @@ ParsingResult Parser::ParseAssignment(InstructionBlock& body) {
     return CORRECT;
 }
 
-ParsingResult Parser::ParseReturnExpr() {
+ParsingResult Parser::ParseReturnExpr(InstructionBlock& body) {
     if(!tokens_.CompareValueWithRollback(KEYWORDS[4])) { return NOT_MATCHED; }
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr);
     if(expr_res != NOT_MATCHED) {
-        return expr_res == CORRECT ? CORRECT : INCORRECT;
+        if(expr_res == INCORRECT) { return INCORRECT; }
+        InstructionBlock* tmp_ib = &body;
+        ReturnInstr ri(PtrEval(new Expr(expr)), &body);
+        body.AddInstruction(PtrEval(new ReturnInstr(ri)));
+        return CORRECT;
     }
     tokens_.FixPosition();
     if(!tokens_.NextTokenTypeEqualsTo(NEWLINE)) {
