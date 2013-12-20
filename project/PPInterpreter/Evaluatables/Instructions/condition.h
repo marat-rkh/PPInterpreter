@@ -6,6 +6,7 @@
 
 class Condition : public Visitable {
   public:
+    Condition() {}
     Condition(Expr e1, Expr e2, std::string comp_char):
         Visitable(),
         e1_(e1),

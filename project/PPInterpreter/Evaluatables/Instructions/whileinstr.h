@@ -8,6 +8,7 @@ class WhileInstr: public ControlFlowInstr {
     WhileInstr(Condition const& c, InstructionBlock const& body):
         ControlFlowInstr(c, body)
     {}
+    WhileInstr(WhileInstr const& wi): ControlFlowInstr(wi) {}
     /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 };
 

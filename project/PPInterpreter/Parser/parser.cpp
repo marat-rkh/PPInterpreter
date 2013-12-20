@@ -9,6 +9,8 @@
 #include "returninstr.h"
 #include "number.h"
 #include "variable.h"
+#include "ifinstr.h"
+#include "whileinstr.h"
 
 Program Parser::Parse(Error& error) {
     InstructionBlock program_body;
@@ -122,7 +124,7 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
     if(io_res != NOT_MATCHED) {
         return io_res == CORRECT ? CORRECT : INCORRECT;
     }
-    ParsingResult contr_flow_res = ParseControlFlowInstr();
+    ParsingResult contr_flow_res = ParseControlFlowInstr(body);
     if(contr_flow_res != NOT_MATCHED) {
         return contr_flow_res == CORRECT ? CORRECT : INCORRECT;
     }
@@ -158,24 +160,37 @@ ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
     return NOT_MATCHED;
 }
 
-ParsingResult Parser::ParseControlFlowInstr() {
+ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body) {
     if(!tokens_.CompareValueWithRollback(KEYWORDS[2]) &&
        !tokens_.CompareValueWithRollback(KEYWORDS[3]))
     {
         return NOT_MATCHED;
     }
+    std::string instruction_type = tokens_.GetCurrentTokenValue();
+
     Expr left_expr;
     ParsingResult expr_res = ParseExpr(left_expr);
     if(expr_res == INCORRECT || expr_res == NOT_MATCHED) { return INCORRECT; }
     if(!tokens_.NextTokenTypeEqualsTo(COMPARISON_CHAR)) { return INCORRECT; }
+    std::string comp_char = tokens_.GetCurrentTokenValue();
+
     Expr right_expr;
     expr_res = ParseExpr(right_expr);
-    InstructionBlock tmp_bl;
+    InstructionBlock cf_instr_body;
     if(expr_res == INCORRECT ||
        expr_res == NOT_MATCHED ||
-       !CheckBlock(tmp_bl))
+       !CheckBlock(cf_instr_body))
     {
         return INCORRECT;
+    }
+    Condition cond(left_expr, right_expr, comp_char);
+    if(instruction_type == "while") {
+        WhileInstr while_instr(cond, cf_instr_body);
+        body.AddInstruction(PtrVisitable(new WhileInstr(while_instr)));
+    }
+    else {
+        IfInstr if_instr(cond, cf_instr_body);
+        body.AddInstruction(PtrVisitable(new IfInstr(if_instr)));
     }
     return CORRECT;
 }

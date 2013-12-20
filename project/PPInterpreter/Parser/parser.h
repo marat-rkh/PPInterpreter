@@ -44,7 +44,7 @@ private:
 
     ParsingResult ParseInstruction(InstructionBlock& body);
     ParsingResult ParseIOInstr(InstructionBlock& body);
-    ParsingResult ParseControlFlowInstr();
+    ParsingResult ParseControlFlowInstr(InstructionBlock& body);
     ParsingResult ParseAssignment(InstructionBlock& body);
     ParsingResult ParseReturnExpr(InstructionBlock& body);
 

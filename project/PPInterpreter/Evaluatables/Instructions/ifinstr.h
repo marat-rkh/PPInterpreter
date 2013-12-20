@@ -5,10 +5,15 @@
 
 class IfInstr : public ControlFlowInstr {
   public:
+    IfInstr() {}
     IfInstr(Condition const& c, InstructionBlock const& body):
         ControlFlowInstr(c, body)
     {}
-    /*virtual*/int accept(Visitor &v);
+    IfInstr(IfInstr const& ii):
+        ControlFlowInstr(ii)
+    {}
+
+    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 };
 
 #endif // IFINSTR_H
