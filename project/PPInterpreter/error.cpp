@@ -11,7 +11,7 @@ std::string Error::GetErrorMessage() {
     if(last_error_type_ == NOERRORS) {
         return "No errors occured";
     }
-    std::string prefix = "line " + std::to_string(last_error_line_) + ": ";
+    std::string prefix = "\nline " + std::to_string(last_error_line_) + ": ";
     switch(last_error_type_)  {
     case SYNTAX_ER:
         return prefix + "syntax error";

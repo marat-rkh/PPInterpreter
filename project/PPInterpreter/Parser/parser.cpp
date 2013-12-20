@@ -3,6 +3,8 @@
 
 #include "program.h"
 #include "Creators/funccreator.h"
+#include "assignment.h"
+#include "readinstr.h"
 #include "printinstr.h"
 #include "number.h"
 #include "variable.h"
@@ -123,7 +125,7 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
     if(contr_flow_res != NOT_MATCHED) {
         return contr_flow_res == CORRECT ? CORRECT : INCORRECT;
     }
-    ParsingResult assign_res = ParseAssignment();
+    ParsingResult assign_res = ParseAssignment(body);
     if(assign_res != NOT_MATCHED) {
         return assign_res == CORRECT ? CORRECT : INCORRECT;
     }
@@ -143,7 +145,8 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
 
 ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
     if(tokens_.CompareValueWithRollback(KEYWORDS[6])) {
-        return tokens_.CompareTypeWithRollback(ID) ? CORRECT : INCORRECT;
+        if(!tokens_.CompareTypeWithRollback(ID)) { return INCORRECT; }
+        body.AddInstruction(PtrEval(new ReadInstr(tokens_.GetCurrentTokenValue())));
     }
     if(tokens_.CompareValueWithRollback(KEYWORDS[5])) {
         Expr expr;
@@ -176,16 +179,20 @@ ParsingResult Parser::ParseControlFlowInstr() {
     return CORRECT;
 }
 
-ParsingResult Parser::ParseAssignment() {
+ParsingResult Parser::ParseAssignment(InstructionBlock& body) {
     tokens_.FixPosition();
     if(!tokens_.CompareTypeWithRollback(ID)) { return NOT_MATCHED; }
+    std::string id = tokens_.GetCurrentTokenValue();
     if(!tokens_.CompareTypeWithRollback(ASSIGN_OP)) {
         tokens_.RollbackToFixedPosition();
         return NOT_MATCHED;
     }
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr);
-    return expr_res == CORRECT ? CORRECT : INCORRECT;
+    if(expr_res == INCORRECT) { return INCORRECT; }
+    Assignment assign(id, PtrEval(new Expr(expr)));
+    body.AddInstruction(PtrEval(new Assignment(assign)));
+    return CORRECT;
 }
 
 ParsingResult Parser::ParseReturnExpr() {

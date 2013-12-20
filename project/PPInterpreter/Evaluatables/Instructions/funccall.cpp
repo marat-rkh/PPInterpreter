@@ -10,6 +10,10 @@ int FuncCall::Evaluate(Scope &scope, Error &error) {
         return 0;
     }
     std::vector<std::string> params_names((it->second)->GetParams());
+    if(params_names.size() != params_.size()) {
+        error.Set(Error::ARGNUMMISMATCH_ER, line_number_);
+        return 0;
+    }
     Scope local_scope;
     for(size_t i = 0; i != params_.size(); ++i) {
         int value = params_[i].Evaluate(scope, error);

@@ -1,8 +1,7 @@
 #include "assignment.h"
-#include "Evaluatables/function.h"
-#include "Evaluatables/evaluatable.h"
-#include "returninstr.h"
-#include "Evaluatables/number.h"
+
+#include "evaluatable.h"
+#include "number.h"
 
 int Assignment::Evaluate(Scope &scope, Error& error) {
     int value = expr_->Evaluate(scope, error);
@@ -11,16 +10,12 @@ int Assignment::Evaluate(Scope &scope, Error& error) {
     }
     Scope::iterator it = scope.find(id_);
 
-    PtrEval number_expr(new Number(value));
-    InstructionBlock body;
-    body.AddInstruction(number_expr);
-    PtrEval func(new Function(body, std::vector<std::string>()));
-
+    PtrEval number(new Number(value));
     if(it == scope.end()) {
-        scope.insert(std::pair<std::string, PtrEval>(id_, func)); // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        scope.insert(std::pair<std::string, PtrEval>(id_, number));
     }
     else {
-        it->second = func; // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        it->second = number;
     }
     return 0;
 }

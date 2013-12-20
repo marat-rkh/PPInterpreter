@@ -13,6 +13,7 @@ class InstructionBlock : public Evaluatable {
     }
     InstructionBlock(InstructionBlock const& instr_block):
         Evaluatable(instr_block),
+        has_returned_(false),
         instructions_(instr_block.instructions_)
     {}
     void AddInstruction(PtrEval instr) {

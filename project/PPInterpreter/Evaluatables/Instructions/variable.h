@@ -1,7 +1,7 @@
 #ifndef VARIABLE_H
 #define VARIABLE_H
 
-#include "callable.h"
+#include "evaluatable.h"
 
 class Variable : public Evaluatable {
   public:

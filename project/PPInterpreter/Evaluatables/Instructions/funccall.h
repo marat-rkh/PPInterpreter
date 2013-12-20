@@ -3,7 +3,6 @@
 
 #include <vector>
 
-#include "callable.h"
 #include "expr.h"
 
 class FuncCall : public Evaluatable {
