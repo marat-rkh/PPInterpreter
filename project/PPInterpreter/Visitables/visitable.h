@@ -6,7 +6,7 @@
 #include <string>
 #include <memory>
 
-#include "error.h"
+#include "../error.h"
 
 class Visitor;
 class Visitable;

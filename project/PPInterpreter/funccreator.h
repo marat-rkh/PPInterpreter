@@ -3,9 +3,9 @@
 
 #include <string>
 
-#include "instructionblock.h"
+#include "Visitables/instructionblock.h"
 #include "globalscope.h"
-#include "function.h"
+#include "Visitables/function.h"
 
 class FuncCreator {
   public:

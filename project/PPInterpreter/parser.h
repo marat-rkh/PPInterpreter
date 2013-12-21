@@ -4,15 +4,15 @@
 #include <vector>
 #include <memory>
 
-#include "Lexer/token.h"
-#include "Parser/tokenstream.h"
+#include "token.h"
+#include "tokenstream.h"
 #include "defines.h"
-#include "program.h"
+#include "Visitables/program.h"
 #include "error.h"
-#include "Creators/funccreator.h"
-#include "Creators/funccallcreator.h"
-#include "expr.h"
-#include "term.h"
+#include "funccreator.h"
+#include "funccallcreator.h"
+#include "Visitables/expr.h"
+#include "Visitables/term.h"
 
 using std::vector;
 

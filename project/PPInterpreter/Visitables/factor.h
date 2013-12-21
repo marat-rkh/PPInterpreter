@@ -2,7 +2,7 @@
 #define FACTOR_H
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
+#include "../visitor.h"
 
 class Factor : public Visitable {
 public:

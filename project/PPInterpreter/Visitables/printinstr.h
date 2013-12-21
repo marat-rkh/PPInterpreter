@@ -2,7 +2,7 @@
 #define PRINTINSTR_H
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
+#include "../visitor.h"
 #include "expr.h"
 
 class PrintInstr : public Visitable {

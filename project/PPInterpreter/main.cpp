@@ -5,29 +5,55 @@
 #include "lexer.h"
 #include "parser.h"
 
+#include "Visitables/program.h"
+#include "evaluator.h"
 #include "globalscope.h"
-#include "program.h"
-#include "Evaluator/evaluator.h"
 #include "error.h"
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::vector;
 
 void PrintTokens(vector<Token>& tokens);
 void TestLexer(std::string test_file, bool print);
 void TestParser(std::string test_file);
 void TestEvaluation(std::string test_file);
 
-int main() {
+int main(int argc, char** argv) {
 //    string test_file = "../../tests/test_parser1";
 //    string test_file = "../../tests/test_arithm_expr1";
 //    string test_file = "../../tests/test_parser2";
 //    string test_file = "../../tests/test_lexer1";
-    string test_file = "../../tests/test_eval1";
+//    string test_file = "../../tests/test_eval1";
 
-    TestLexer(test_file, false);
-    TestParser(test_file);
-    TestEvaluation(test_file);
+//    TestLexer(test_file, false);
+//    TestParser(test_file);
+//    TestEvaluation(test_file);
 
+    if(argc != 2) {
+        cout << "error: incorrect arguments" << endl;
+        return 0;
+    }
+    string input_file_path = argv[1];
+    Lexer lexer;
+    int res = lexer.Tokenize(input_file_path);
+    if(res < 0) {
+        cout << "error: can't open file" << endl;
+        return 0;
+    }
+    Parser parser(lexer.tokens());
+    Error error;
+    Program program(parser.Parse(error));
+    if(error.IsOccured()) {
+        cout << error.GetErrorMessage() << endl;
+        return 0;
+    }
+    Evaluator eva;
+    program.accept(eva);
+    if(program.RuntimeErrorIsOccured()) {
+        cout << program.GetErrorMessage() << endl;
+        return 0;
+    }
     return 0;
 }
 

@@ -2,7 +2,7 @@
 #define READINSTR_H
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
+#include "../visitor.h"
 
 class ReadInstr : public Visitable {
 public:

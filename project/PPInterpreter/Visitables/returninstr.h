@@ -2,8 +2,8 @@
 #define RETURNINSTR_H
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
-#include "Evaluatables/instructionblock.h"
+#include "../visitor.h"
+#include "instructionblock.h"
 #include <iostream>
 
 class ReturnInstr : public Visitable {

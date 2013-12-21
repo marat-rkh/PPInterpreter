@@ -2,7 +2,7 @@
 #define GLOBALSCOPE_H
 
 #include "defines.h"
-#include "function.h"
+#include "Visitables/function.h"
 
 typedef std::shared_ptr<Function> PtrFunc;
 typedef std::map<std::string, PtrFunc> GSFuncs;

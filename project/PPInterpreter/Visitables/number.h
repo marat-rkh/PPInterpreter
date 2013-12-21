@@ -2,7 +2,7 @@
 #define NUMBER_H
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
+#include "../visitor.h"
 
 #include <cstdlib>
 

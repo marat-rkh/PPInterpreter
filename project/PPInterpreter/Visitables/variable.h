@@ -2,7 +2,7 @@
 #define VARIABLE_H
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
+#include "../visitor.h"
 
 class Variable : public Visitable {
   public:

@@ -2,7 +2,7 @@
 #define FUNCTION_H
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
+#include "../visitor.h"
 #include "instructionblock.h"
 
 #include <vector>

@@ -1,17 +1,17 @@
 #include "parser.h"
 #include "lexer.h"
 
-#include "program.h"
-#include "Creators/funccreator.h"
-#include "assignment.h"
-#include "readinstr.h"
-#include "printinstr.h"
-#include "returninstr.h"
-#include "factor.h"
-#include "number.h"
-#include "variable.h"
-#include "ifinstr.h"
-#include "whileinstr.h"
+#include "Visitables/program.h"
+#include "funccreator.h"
+#include "Visitables/assignment.h"
+#include "Visitables/readinstr.h"
+#include "Visitables/printinstr.h"
+#include "Visitables/returninstr.h"
+#include "Visitables/factor.h"
+#include "Visitables/number.h"
+#include "Visitables/variable.h"
+#include "Visitables/ifinstr.h"
+#include "Visitables/whileinstr.h"
 
 Program Parser::Parse(Error& error) {
     InstructionBlock program_body;

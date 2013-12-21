@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
+#include "../visitor.h"
 
 class InstructionBlock : public Visitable {
   public:

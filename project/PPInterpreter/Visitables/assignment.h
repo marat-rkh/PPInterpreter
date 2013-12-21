@@ -2,7 +2,7 @@
 #define ASSIGNMENT_H
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
+#include "../visitor.h"
 
 class Assignment : public Visitable {
   public:

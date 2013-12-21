@@ -4,9 +4,9 @@
 #include <vector>
 
 #include "visitable.h"
-#include "Evaluator/visitor.h"
-#include "Evaluatables/instructionblock.h"
-#include "globalscope.h"
+#include "../visitor.h"
+#include "instructionblock.h"
+#include "../globalscope.h"
 
 using std::vector;
 using std::map;

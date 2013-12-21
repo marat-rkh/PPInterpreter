@@ -15,8 +15,8 @@ def func2():
   end
 end
 
-x = null
-y = null
+x = 0
+y = 0
 read x
 read y
 
