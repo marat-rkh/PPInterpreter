@@ -7,7 +7,6 @@
 
 #include "Visitables/program.h"
 #include "evaluator.h"
-#include "globalscope.h"
 #include "error.h"
 
 using std::cout;

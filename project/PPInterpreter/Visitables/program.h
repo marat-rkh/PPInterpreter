@@ -6,7 +6,6 @@
 #include "visitable.h"
 #include "../visitor.h"
 #include "instructionblock.h"
-#include "../globalscope.h"
 
 using std::vector;
 using std::map;

@@ -4,15 +4,15 @@
 #include <vector>
 #include <memory>
 
-#include "token.h"
-#include "tokenstream.h"
+#include "lexer.h"
 #include "defines.h"
-#include "Visitables/program.h"
 #include "error.h"
-#include "funccreator.h"
-#include "funccallcreator.h"
+#include "Visitables/program.h"
 #include "Visitables/expr.h"
 #include "Visitables/term.h"
+#include "Visitables/funccall.h"
+#include "Visitables/function.h"
+#include "evaluator.h"
 
 using std::vector;
 
@@ -21,10 +21,6 @@ typedef std::vector<Token>::iterator TokIterator;
 
 class Parser {
 public:
-//    Parser(vector<Token> const& tokens):
-//        tokens_(tokens),
-//        current_line_(1)
-//    {}
     Parser(): current_line_(1) {}
     Program Parse(vector<Token>& tokens, Error& error);
 
@@ -34,13 +30,15 @@ private:
     ParsingResult ParseStmt(InstructionBlock& program_body, TokIterator& it);
     ParsingResult ParseFuncDecl(TokIterator& it);
 
-    template<class T>
-    ParsingResult ParseFuncHeader(bool (Parser::*CheckerFunc)(T&, TokIterator&), T& creator, TokIterator& it);
+    class Creator;
+    ParsingResult ParseFuncHeader(bool (Parser::*ParamsChecker)(Creator&, TokIterator&),
+                                  Creator& creator,
+                                  TokIterator& it);
 
-    bool CheckFuncDeclParams(FuncCreator& creator, TokIterator& it);
-    bool CheckFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it);
-    bool CheckFuncCallParams(FuncCallCreator& creator, TokIterator& it);
-    bool CheckFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it);
+    bool CheckFuncDeclParams(Creator& creator, TokIterator& it);
+    bool CheckFuncDeclParamsLoop(Creator& creator, TokIterator& it);
+    bool CheckFuncCallParams(Creator& creator, TokIterator& it);
+    bool CheckFuncCallParamsLoop(Creator& creator, TokIterator& it);
     bool CheckBlock(InstructionBlock& body, TokIterator& it);
     bool CheckBlockBody(InstructionBlock& body, TokIterator& it);
 
@@ -56,8 +54,28 @@ private:
     bool CheckTermLoop(Term& term, TokIterator& it);
     ParsingResult ParseFactor(Factor& term, TokIterator& it);
 
-//    TokenStream tokens_;
     size_t current_line_;
+
+    class Creator {
+    public:
+        Creator() {}
+        void SetIDAndLine(std::string id, size_t line_num) {
+            id_ = id;
+            line_number_ = line_num;
+        }
+        void AddParam(Expr const& expr) { call_params_.push_back(expr); }
+        void AddParam(std::string param_name) { params_.push_back(param_name); }
+        FuncCall Create() { return FuncCall(id_, call_params_, line_number_); }
+        void CreateWithBody(InstructionBlock const& body) {
+            PtrFunc func(new Function(body, params_, line_number_));
+            GlobalScope::GetInstance().gs_funcs.insert(std::pair<std::string, PtrFunc> (id_, func));
+        }
+    private:
+        std::string id_;
+        size_t line_number_;
+        std::vector<Expr> call_params_;
+        std::vector<std::string> params_;
+    };
 };
 
 #endif // PARSER_H

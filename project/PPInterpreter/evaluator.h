@@ -8,7 +8,7 @@
 
 #include "Visitables/visitable.h"
 #include "error.h"
-#include "globalscope.h"
+#include "defines.h"
 
 typedef std::shared_ptr<Function> PtrFunc;
 typedef std::map<std::string, PtrFunc> GSFuncs;
@@ -46,6 +46,22 @@ private:
     std::stack<Scope> scope_stack_;
     Error error_;
     bool return_instr_happened_;
+};
+
+typedef std::shared_ptr<Function> PtrFunc;
+typedef std::map<std::string, PtrFunc> GSFuncs;
+
+class GlobalScope {
+public:
+    static GlobalScope& GetInstance() {
+        static GlobalScope global_scope;
+        return global_scope;
+    }
+    GSFuncs gs_funcs;
+
+private:
+    GlobalScope(): gs_funcs() {}
+    DISABLE_COPY_AND_ASSIGN(GlobalScope);
 };
 
 #endif // EVALUATOR_H

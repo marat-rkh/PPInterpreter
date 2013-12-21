@@ -2,7 +2,6 @@
 #include "lexer.h"
 
 #include "Visitables/program.h"
-#include "funccreator.h"
 #include "Visitables/assignment.h"
 #include "Visitables/readinstr.h"
 #include "Visitables/printinstr.h"
@@ -44,7 +43,7 @@ ParsingResult Parser::ParseFuncDecl(TokIterator& it) {
         return NOT_MATCHED;
     }
     ++it;
-    FuncCreator func_creator;
+    Creator func_creator;
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncDeclParams, func_creator, it);
     if(func_res != CORRECT) { return INCORRECT; }
     InstructionBlock body;
@@ -53,8 +52,9 @@ ParsingResult Parser::ParseFuncDecl(TokIterator& it) {
     return CORRECT;
 }
 
-template<class T>
-ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(T&, TokIterator&), T& creator, TokIterator& it) {
+ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(Creator&, TokIterator&),
+                                      Creator& creator,
+                                      TokIterator& it) {
     TokIterator it_copy(it);
     if(it_copy->type_ != ID) { return NOT_MATCHED; }
     creator.SetIDAndLine(it_copy->value_, current_line_);
@@ -67,21 +67,21 @@ ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(T&, TokItera
     return CORRECT;
 }
 
-bool Parser::CheckFuncDeclParams(FuncCreator& creator, TokIterator& it) {
+bool Parser::CheckFuncDeclParams(Creator& creator, TokIterator& it) {
     if(it->type_ != ID) { return true; }
     creator.AddParam(it->value_);
     ++it;
     return CheckFuncDeclParamsLoop(creator, it) ? true : false;
 }
 
-bool Parser::CheckFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it) {
+bool Parser::CheckFuncDeclParamsLoop(Creator& creator, TokIterator& it) {
     if(it->type_ != COMMA) { return true; }
     else if((++it)->type_ != ID) { return false; }
     creator.AddParam(it->value_);
     return CheckFuncDeclParamsLoop(creator, it);
 }
 
-bool Parser::CheckFuncCallParams(FuncCallCreator& creator, TokIterator& it) {
+bool Parser::CheckFuncCallParams(Creator& creator, TokIterator& it) {
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr, it);
     if(expr_res != CORRECT) {
@@ -91,7 +91,7 @@ bool Parser::CheckFuncCallParams(FuncCallCreator& creator, TokIterator& it) {
     return CheckFuncCallParamsLoop(creator, it) ? true : false;
 }
 
-bool Parser::CheckFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it) {
+bool Parser::CheckFuncCallParamsLoop(Creator& creator, TokIterator& it) {
     if(it->type_ != COMMA) { return true; }
     else {
         Expr expr;
@@ -137,7 +137,7 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body, TokIterator& it) 
     if(assign_res != NOT_MATCHED) {
         return assign_res == CORRECT ? CORRECT : INCORRECT;
     }
-    FuncCallCreator func_call_creator;
+    Creator func_call_creator;
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res == INCORRECT) { return INCORRECT; }
@@ -295,7 +295,7 @@ ParsingResult Parser::ParseFactor(Factor& factor, TokIterator& it) {
         ++it;
         return CORRECT;
     }
-    FuncCallCreator func_call_creator;
+    Creator func_call_creator;
     ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res != CORRECT) { return INCORRECT; }

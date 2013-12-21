@@ -5,13 +5,37 @@
 #include <vector>
 #include <fstream>
 
-#include "token.h"
 #include "defines.h"
 #include "error.h"
 
 using std::string;
 using std::fstream;
 using std::vector;
+
+enum TokenType {ID,
+                KEYWORD,
+                NUMBER,
+                PLUS_OP,
+                MINUS_OP,
+                MUL_OP,
+                DIV_OP,
+                COMPARISON_OP,
+                ASSIGN_OP,
+                COLUMN,
+                COMMA,
+                OPEN_BRACE,
+                CLOSE_BRACE,
+                COMMENT,
+                WHITESPACE,
+                NEWLINE,
+                UNKNOWN};
+
+class Token {
+  public:
+    Token(TokenType type, std::string val): type_(type), value_(val) {}
+    TokenType type_;
+    std::string value_;
+};
 
 static const string KEYWORDS[] = {"def", "end", "if", "while", "return", "print", "read"};
 static const size_t KEYWORDS_NUMBER = 7;
