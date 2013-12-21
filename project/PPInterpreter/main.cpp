@@ -24,36 +24,36 @@ int main(int argc, char** argv) {
 //    string test_file = "../../tests/test_arithm_expr1";
 //    string test_file = "../../tests/test_parser2";
 //    string test_file = "../../tests/test_lexer1";
-//    string test_file = "../../tests/test_eval1";
+    string test_file = "../../tests/test_eval1";
 
-//    TestLexer(test_file, false);
-//    TestParser(test_file);
-//    TestEvaluation(test_file);
+    TestLexer(test_file, false);
+    TestParser(test_file);
+    TestEvaluation(test_file);
 
-    if(argc != 2) {
-        cout << "error: incorrect arguments" << endl;
-        return 0;
-    }
-    string input_file_path = argv[1];
-    Lexer lexer;
-    Error error;
-    lexer.Tokenize(input_file_path, error);
-    if(error.IsOccured()) {
-        cout << error.GetErrorMessage() << endl;
-        return 0;
-    }
-    Parser parser(lexer.tokens());
-    Program program(parser.Parse(error));
-    if(error.IsOccured()) {
-        cout << error.GetErrorMessage() << endl;
-        return 0;
-    }
-    Evaluator eva;
-    program.accept(eva);
-    if(program.RuntimeErrorIsOccured()) {
-        cout << program.GetErrorMessage() << endl;
-        return 0;
-    }
+//    if(argc != 2) {
+//        cout << "error: incorrect arguments" << endl;
+//        return 0;
+//    }
+//    string input_file_path = argv[1];
+//    Lexer lexer;
+//    Error error;
+//    lexer.Tokenize(input_file_path, error);
+//    if(error.IsOccured()) {
+//        cout << error.GetErrorMessage() << endl;
+//        return 0;
+//    }
+//    Parser parser(lexer.tokens());
+//    Program program(parser.Parse(error));
+//    if(error.IsOccured()) {
+//        cout << error.GetErrorMessage() << endl;
+//        return 0;
+//    }
+//    Evaluator eva;
+//    program.accept(eva);
+//    if(program.RuntimeErrorIsOccured()) {
+//        cout << program.GetErrorMessage() << endl;
+//        return 0;
+//    }
     return 0;
 }
 
@@ -91,8 +91,9 @@ void TestParser(std::string test_file) {
     Lexer lexer;
     Error error;
     lexer.Tokenize(test_file, error);
-    Parser parser(lexer.tokens());
-    parser.Parse(error);
+    Parser parser;
+    std::vector<Token> tokens = lexer.tokens();
+    parser.Parse(tokens, error);
     if(error.IsOccured()) {
         cout << error.GetErrorMessage() << endl;
         return;
@@ -104,8 +105,9 @@ void TestEvaluation(std::string test_file) {
     Lexer lexer;
     Error error;
     lexer.Tokenize(test_file, error);
-    Parser parser(lexer.tokens());
-    Program program(parser.Parse(error));
+    Parser parser;
+    std::vector<Token> tokens = lexer.tokens();
+    Program program(parser.Parse(tokens, error));
     if(error.IsOccured()) {
         cout << error.GetErrorMessage() << endl;
         return;

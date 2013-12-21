@@ -13,11 +13,12 @@
 #include "Visitables/ifinstr.h"
 #include "Visitables/whileinstr.h"
 
-Program Parser::Parse(Error& error) {
+Program Parser::Parse(vector<Token>& tokens, Error& error) {
     InstructionBlock program_body;
-    while(!tokens_.End()) {
-        ParsingResult stmt_res = ParseStmt(program_body);
-        if(stmt_res == INCORRECT || !tokens_.NextTokenTypeEqualsTo(NEWLINE)) {
+    TokIterator it = tokens.begin();
+    while(it != tokens.end()) {
+        ParsingResult stmt_res = ParseStmt(program_body, it);
+        if(stmt_res == INCORRECT || (it++)->type_ != NEWLINE) {
             error.Set(Error::SYNTAX_ER, current_line_);
             return Program();
         }
@@ -26,161 +27,165 @@ Program Parser::Parse(Error& error) {
     return Program(program_body);
 }
 
-ParsingResult Parser::ParseStmt(InstructionBlock& program_body) {
-    ParsingResult func_res = ParseFuncDecl();
+ParsingResult Parser::ParseStmt(InstructionBlock& program_body, TokIterator& it) {
+    ParsingResult func_res = ParseFuncDecl(it);
     if(func_res != NOT_MATCHED) {
         return func_res == CORRECT ? CORRECT : INCORRECT;
     }
-    ParsingResult instr_res = ParseInstruction(program_body);
+    ParsingResult instr_res = ParseInstruction(program_body, it);
     if(instr_res != NOT_MATCHED) {
         return instr_res == CORRECT ? CORRECT : INCORRECT;
     }
     return NOT_MATCHED;
 }
 
-ParsingResult Parser::ParseFuncDecl() {
-    if(!tokens_.LookaheadValue(KEYWORDS[0])) {
+ParsingResult Parser::ParseFuncDecl(TokIterator& it) {
+    if(it->value_ != KEYWORDS[0]) {
         return NOT_MATCHED;
     }
+    ++it;
     FuncCreator func_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncDeclParams, func_creator);
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncDeclParams, func_creator, it);
     if(func_res != CORRECT) { return INCORRECT; }
     InstructionBlock body;
-    if(!CheckBlock(body)) { return INCORRECT; }
+    if(!CheckBlock(body, it)) { return INCORRECT; }
     func_creator.CreateWithBody(body);
     return CORRECT;
 }
 
 template<class T>
-ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(T&), T& creator) {
-    tokens_.FixPosition();
-    if(!tokens_.LookaheadType(ID)) { return NOT_MATCHED; }
-    creator.SetIDAndLine(tokens_.GetCurrentTokenValue(), current_line_);
-    if(!tokens_.LookaheadType(OPEN_BRACE)) {
-        tokens_.RollbackToFixedPosition();
-        return NOT_MATCHED;
-    }
-    if(!(this->*ParamsChecker)(creator) ||
-       !tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE)) { return INCORRECT; }
+ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(T&, TokIterator&), T& creator, TokIterator& it) {
+    TokIterator it_copy(it);
+    if(it_copy->type_ != ID) { return NOT_MATCHED; }
+    creator.SetIDAndLine(it_copy->value_, current_line_);
+    ++it_copy;
+    if(it_copy->type_ != OPEN_BRACE) { return NOT_MATCHED; }
+    ++it_copy;
+    if(!(this->*ParamsChecker)(creator, it_copy) ||
+       it_copy->type_ != CLOSE_BRACE) { return INCORRECT; }
+    it = ++it_copy;
     return CORRECT;
 }
 
-bool Parser::CheckFuncDeclParams(FuncCreator& creator) {
-    if(!tokens_.LookaheadType(ID)) { return true; }
-    creator.AddParam(tokens_.GetCurrentTokenValue());
-    return CheckFuncDeclParamsLoop(creator) ? true : false;
+bool Parser::CheckFuncDeclParams(FuncCreator& creator, TokIterator& it) {
+    if(it->type_ != ID) { return true; }
+    creator.AddParam(it->value_);
+    ++it;
+    return CheckFuncDeclParamsLoop(creator, it) ? true : false;
 }
 
-bool Parser::CheckFuncDeclParamsLoop(FuncCreator& creator) {
-    if(!tokens_.LookaheadType(COMMA)) { return true; }
-    else if(!tokens_.NextTokenTypeEqualsTo(ID)) { return false; }
-    creator.AddParam(tokens_.GetCurrentTokenValue());
-    return CheckFuncDeclParamsLoop(creator);
+bool Parser::CheckFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it) {
+    if(it->type_ != COMMA) { return true; }
+    else if((++it)->type_ != ID) { return false; }
+    creator.AddParam(it->value_);
+    return CheckFuncDeclParamsLoop(creator, it);
 }
 
-bool Parser::CheckFuncCallParams(FuncCallCreator& creator) {
+bool Parser::CheckFuncCallParams(FuncCallCreator& creator, TokIterator& it) {
     Expr expr;
-    ParsingResult expr_res = ParseExpr(expr);
+    ParsingResult expr_res = ParseExpr(expr, it);
     if(expr_res != CORRECT) {
         return expr_res == NOT_MATCHED;
     }
     creator.AddParam(expr);
-    return CheckFuncCallParamsLoop(creator) ? true : false;
+    return CheckFuncCallParamsLoop(creator, it) ? true : false;
 }
 
-bool Parser::CheckFuncCallParamsLoop(FuncCallCreator& creator) {
-    if(!tokens_.LookaheadType(COMMA)) { return true; }
+bool Parser::CheckFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it) {
+    if(it->type_ != COMMA) { return true; }
     else {
         Expr expr;
-        ParsingResult expr_res = ParseExpr(expr);
+        ParsingResult expr_res = ParseExpr(expr, ++it);
         if(expr_res != CORRECT) { return false; }
         creator.AddParam(expr);
     }
-    return CheckFuncCallParamsLoop(creator);
+    return CheckFuncCallParamsLoop(creator, it);
 }
 
-bool Parser::CheckBlock(InstructionBlock& body) {
-    if(!tokens_.NextTokenTypeEqualsTo(COLUMN) ||
-       !tokens_.NextTokenTypeEqualsTo(NEWLINE))
+bool Parser::CheckBlock(InstructionBlock& body, TokIterator& it) {
+    if(it->type_ != COLUMN ||
+       (++it)->type_ !=NEWLINE)
     {
         return false;
     }
     ++current_line_;
-    return CheckBlockBody(body);
+    return CheckBlockBody(body, ++it);
 }
 
-bool Parser::CheckBlockBody(InstructionBlock& body) {
-    ParsingResult instr_res = ParseInstruction(body);
+bool Parser::CheckBlockBody(InstructionBlock& body, TokIterator& it) {
+    ParsingResult instr_res = ParseInstruction(body, it);
     if(instr_res == INCORRECT) { return false; }
-    if(!tokens_.LookaheadType(NEWLINE)) {
+    if(it->type_ != NEWLINE) {
        if(instr_res == CORRECT) { return false; }
-       return tokens_.NextTokenValueEqualsTo(KEYWORDS[1]);
+       return (it++)->value_ == KEYWORDS[1];
     }
+    ++it;
     ++current_line_;
-    return CheckBlockBody(body);
+    return CheckBlockBody(body, it);
 }
 
-ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
-    ParsingResult io_res = ParseIOInstr(body);
+ParsingResult Parser::ParseInstruction(InstructionBlock& body, TokIterator& it) {
+    ParsingResult io_res = ParseIOInstr(body, it);
     if(io_res != NOT_MATCHED) {
         return io_res == CORRECT ? CORRECT : INCORRECT;
     }
-    ParsingResult contr_flow_res = ParseControlFlowInstr(body);
+    ParsingResult contr_flow_res = ParseControlFlowInstr(body, it);
     if(contr_flow_res != NOT_MATCHED) {
         return contr_flow_res == CORRECT ? CORRECT : INCORRECT;
     }
-    ParsingResult assign_res = ParseAssignment(body);
+    ParsingResult assign_res = ParseAssignment(body, it);
     if(assign_res != NOT_MATCHED) {
         return assign_res == CORRECT ? CORRECT : INCORRECT;
     }
     FuncCallCreator func_call_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res == INCORRECT) { return INCORRECT; }
         body.AddInstruction(PtrVisitable(new FuncCall(func_call_creator.Create())));
         return CORRECT;
     }
-    ParsingResult return_expr_res = ParseReturnExpr(body);
+    ParsingResult return_expr_res = ParseReturnExpr(body, it);
     if(return_expr_res != NOT_MATCHED) {
         return return_expr_res == CORRECT ? CORRECT : INCORRECT;
     }
     return NOT_MATCHED;
 }
 
-ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
-    if(tokens_.LookaheadValue(KEYWORDS[6])) {
-        if(!tokens_.LookaheadType(ID)) { return INCORRECT; }
-        body.AddInstruction(PtrVisitable(new ReadInstr(tokens_.GetCurrentTokenValue(), current_line_)));
+ParsingResult Parser::ParseIOInstr(InstructionBlock& body, TokIterator& it) {
+    if(it->value_ == KEYWORDS[6]) {
+        if((++it)->type_ != ID) { return INCORRECT; }
+        body.AddInstruction(PtrVisitable(new ReadInstr((it++)->value_, current_line_)));
+        return CORRECT;
     }
-    if(tokens_.LookaheadValue(KEYWORDS[5])) {
+    if(it->value_ == KEYWORDS[5]) {
         Expr expr;
-        if(ParseExpr(expr) != CORRECT) { return INCORRECT; }
+        if(ParseExpr(expr, ++it) != CORRECT) { return INCORRECT; }
         body.AddInstruction(PtrVisitable(new PrintInstr(expr, current_line_)));
         return CORRECT;
     }
     return NOT_MATCHED;
 }
 
-ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body) {
-    if(!tokens_.LookaheadValue(KEYWORDS[2]) &&
-       !tokens_.LookaheadValue(KEYWORDS[3]))
+ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body, TokIterator& it) {
+    if(it->value_ != KEYWORDS[2] &&
+       it->value_ != KEYWORDS[3])
     {
         return NOT_MATCHED;
     }
-    std::string instruction_type = tokens_.GetCurrentTokenValue();
-
+    std::string instruction_type = it->value_;
+    ++it;
     Expr left_expr;
-    ParsingResult expr_res = ParseExpr(left_expr);
+    ParsingResult expr_res = ParseExpr(left_expr, it);
     if(expr_res == INCORRECT || expr_res == NOT_MATCHED) { return INCORRECT; }
-    if(!tokens_.NextTokenTypeEqualsTo(COMPARISON_OP)) { return INCORRECT; }
-    std::string comp_char = tokens_.GetCurrentTokenValue();
+    if(it->type_ != COMPARISON_OP) { return INCORRECT; }
+    std::string comp_char = it->value_;
 
     Expr right_expr;
-    expr_res = ParseExpr(right_expr);
+    expr_res = ParseExpr(right_expr, ++it);
     InstructionBlock cf_instr_body;
     if(expr_res == INCORRECT ||
        expr_res == NOT_MATCHED ||
-       !CheckBlock(cf_instr_body))
+       !CheckBlock(cf_instr_body, it))
     {
         return INCORRECT;
     }
@@ -196,112 +201,116 @@ ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body) {
     return CORRECT;
 }
 
-ParsingResult Parser::ParseAssignment(InstructionBlock& body) {
-    tokens_.FixPosition();
-    if(!tokens_.LookaheadType(ID)) { return NOT_MATCHED; }
-    std::string id = tokens_.GetCurrentTokenValue();
-    if(!tokens_.LookaheadType(ASSIGN_OP)) {
-        tokens_.RollbackToFixedPosition();
-        return NOT_MATCHED;
-    }
+ParsingResult Parser::ParseAssignment(InstructionBlock& body, TokIterator& it) {
+    TokIterator it_copy(it);
+    if(it_copy->type_ != ID) { return NOT_MATCHED; }
+    std::string id = it_copy->value_;
+    if((++it_copy)->type_ != ASSIGN_OP) { return NOT_MATCHED; }
     Expr expr;
-    ParsingResult expr_res = ParseExpr(expr);
+    ParsingResult expr_res = ParseExpr(expr, ++it_copy);
     if(expr_res == INCORRECT) { return INCORRECT; }
     Assignment assign(id, PtrVisitable(new Expr(expr)), current_line_);
     body.AddInstruction(PtrVisitable(new Assignment(assign)));
+    it = it_copy;
     return CORRECT;
 }
 
-ParsingResult Parser::ParseReturnExpr(InstructionBlock& body) {
-    if(!tokens_.LookaheadValue(KEYWORDS[4])) { return NOT_MATCHED; }
+ParsingResult Parser::ParseReturnExpr(InstructionBlock& body, TokIterator& it) {
+    if(it->value_ != KEYWORDS[4]) { return NOT_MATCHED; }
     Expr expr;
-    ParsingResult expr_res = ParseExpr(expr);
+    ParsingResult expr_res = ParseExpr(expr, ++it);
     if(expr_res != NOT_MATCHED) {
         if(expr_res == INCORRECT) { return INCORRECT; }
         ReturnInstr ri(PtrVisitable(new Expr(expr)));
         body.AddInstruction(PtrVisitable(new ReturnInstr(ri)));
         return CORRECT;
     }
-    tokens_.FixPosition();
-    if(!tokens_.NextTokenTypeEqualsTo(NEWLINE)) {
+    if(it->type_ != NEWLINE) {
         return INCORRECT;
     }
-    tokens_.RollbackToFixedPosition();
     return CORRECT;
 }
 
-ParsingResult Parser::ParseExpr(Expr& expr) {
+ParsingResult Parser::ParseExpr(Expr& expr, TokIterator& it) {
     expr.SetLineNumber(current_line_);
     Term term;
-    ParsingResult term_res = ParseTerm(term);
+    ParsingResult term_res = ParseTerm(term, it);
     if(term_res != CORRECT) {
         return term_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
     }
     expr.AddTerm(term);
-    return CheckExprLoop(expr) ? CORRECT : INCORRECT;
+    return CheckExprLoop(expr, it) ? CORRECT : INCORRECT;
 }
 
-bool Parser::CheckExprLoop(Expr& expr) {
-    if(!tokens_.LookaheadType(PLUS_OP) &&
-       !tokens_.LookaheadType(MINUS_OP))
+bool Parser::CheckExprLoop(Expr& expr, TokIterator& it) {
+    if(it->type_ != PLUS_OP &&
+       it->type_ != MINUS_OP)
     {
         return true;
     }
-    expr.AddOperation(tokens_.GetCurrentTokenValue());
+    expr.AddOperation(it->value_);
     Term term;
-    ParsingResult term_res = ParseTerm(term);
+    ParsingResult term_res = ParseTerm(term, ++it);
     if(term_res != CORRECT) { return false; }
     expr.AddTerm(term);
-    return CheckExprLoop(expr);
+    return CheckExprLoop(expr, it);
 }
 
-ParsingResult Parser::ParseTerm(Term& term) {
+ParsingResult Parser::ParseTerm(Term& term, TokIterator& it) {
     term.SetLineNumber(current_line_);
     Factor factor;
-    ParsingResult fact_res = ParseFactor(factor);
+    ParsingResult fact_res = ParseFactor(factor, it);
     if(fact_res != CORRECT) {
         return fact_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
     }
     term.AddElem(PtrVisitable(new Factor(factor)));
-    return CheckTermLoop(term) ? CORRECT : INCORRECT;
+    return CheckTermLoop(term, it) ? CORRECT : INCORRECT;
 }
 
-bool Parser::CheckTermLoop(Term& term) {
-    if(!tokens_.LookaheadType(MUL_OP) &&
-       !tokens_.LookaheadType(DIV_OP))
+bool Parser::CheckTermLoop(Term& term, TokIterator& it) {
+    if(it->type_ != MUL_OP &&
+       it->type_ != DIV_OP)
     {
         return true;
     }
-    term.AddOperation(tokens_.GetCurrentTokenValue());
+    term.AddOperation(it->value_);
     Factor factor;
-    ParsingResult fact_res = ParseFactor(factor);
+    ParsingResult fact_res = ParseFactor(factor, ++it);
     if(fact_res != CORRECT) { return false; }
     term.AddElem(PtrVisitable(new Factor(factor)));
-    return CheckTermLoop(term);
+    return CheckTermLoop(term, it);
 }
 
-ParsingResult Parser::ParseFactor(Factor& factor) {
-    if(tokens_.LookaheadType(MINUS_OP)) { factor.SetUnaryOperator("-"); }
-    if(tokens_.LookaheadType(PLUS_OP)) { factor.SetUnaryOperator("+"); }
-    if(tokens_.LookaheadType(NUMBER)) {
-        factor.SetFactExpr(PtrVisitable(new Number(tokens_.GetCurrentTokenValue())));
+ParsingResult Parser::ParseFactor(Factor& factor, TokIterator& it) {
+    if(it->type_ == MINUS_OP) {
+        factor.SetUnaryOperator("-");
+        ++it;
+    }
+    else if(it->type_ == PLUS_OP) {
+        factor.SetUnaryOperator("+");
+        ++it;
+    }
+    if(it->type_ == NUMBER) {
+        factor.SetFactExpr(PtrVisitable(new Number(it->value_)));
+        ++it;
         return CORRECT;
     }
     FuncCallCreator func_call_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator);
+    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res != CORRECT) { return INCORRECT; }
         factor.SetFactExpr(PtrVisitable(new FuncCall(func_call_creator.Create())));
         return CORRECT;
     }
-    if(tokens_.LookaheadType(ID)) {
-        factor.SetFactExpr(PtrVisitable(new Variable(tokens_.GetCurrentTokenValue(), current_line_)));
+    if(it->type_ == ID) {
+        factor.SetFactExpr(PtrVisitable(new Variable(it->value_, current_line_)));
+        ++it;
         return CORRECT;
     }
-    if(!tokens_.LookaheadType(OPEN_BRACE)) { return NOT_MATCHED; }
+    if(it->type_ != OPEN_BRACE) { return NOT_MATCHED; }
     Expr expr;
-    ParsingResult expr_res = ParseExpr(expr);
+    ParsingResult expr_res = ParseExpr(expr, ++it);
     if(expr_res != CORRECT) { return INCORRECT; }
     factor.SetFactExpr(PtrVisitable(new Expr(expr)));
-    return tokens_.NextTokenTypeEqualsTo(CLOSE_BRACE) ? CORRECT : INCORRECT;
+    return ((it++)->type_ == CLOSE_BRACE) ? CORRECT : INCORRECT;
 }
