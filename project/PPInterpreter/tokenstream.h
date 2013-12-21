@@ -32,8 +32,8 @@ public:
     bool End() {
         return current_pos_ == static_cast<int>(tokens_.size() - 1);
     }
-    bool CompareTypeWithRollback(TokenType type);
-    bool CompareValueWithRollback(string value);
+    bool LookaheadType(TokenType type);
+    bool LookaheadValue(string value);
 
     void FixPosition() { fixed_pos_ = current_pos_; }
     void RollbackToFixedPosition() { current_pos_ = fixed_pos_; }

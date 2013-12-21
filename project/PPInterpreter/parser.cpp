@@ -39,7 +39,7 @@ ParsingResult Parser::ParseStmt(InstructionBlock& program_body) {
 }
 
 ParsingResult Parser::ParseFuncDecl() {
-    if(!tokens_.CompareValueWithRollback(KEYWORDS[0])) {
+    if(!tokens_.LookaheadValue(KEYWORDS[0])) {
         return NOT_MATCHED;
     }
     FuncCreator func_creator;
@@ -54,9 +54,9 @@ ParsingResult Parser::ParseFuncDecl() {
 template<class T>
 ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(T&), T& creator) {
     tokens_.FixPosition();
-    if(!tokens_.CompareTypeWithRollback(ID)) { return NOT_MATCHED; }
+    if(!tokens_.LookaheadType(ID)) { return NOT_MATCHED; }
     creator.SetIDAndLine(tokens_.GetCurrentTokenValue(), current_line_);
-    if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) {
+    if(!tokens_.LookaheadType(OPEN_BRACE)) {
         tokens_.RollbackToFixedPosition();
         return NOT_MATCHED;
     }
@@ -66,13 +66,13 @@ ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParamsChecker)(T&), T& crea
 }
 
 bool Parser::CheckFuncDeclParams(FuncCreator& creator) {
-    if(!tokens_.CompareTypeWithRollback(ID)) { return true; }
+    if(!tokens_.LookaheadType(ID)) { return true; }
     creator.AddParam(tokens_.GetCurrentTokenValue());
     return CheckFuncDeclParamsLoop(creator) ? true : false;
 }
 
 bool Parser::CheckFuncDeclParamsLoop(FuncCreator& creator) {
-    if(!tokens_.CompareTypeWithRollback(COMMA)) { return true; }
+    if(!tokens_.LookaheadType(COMMA)) { return true; }
     else if(!tokens_.NextTokenTypeEqualsTo(ID)) { return false; }
     creator.AddParam(tokens_.GetCurrentTokenValue());
     return CheckFuncDeclParamsLoop(creator);
@@ -89,7 +89,7 @@ bool Parser::CheckFuncCallParams(FuncCallCreator& creator) {
 }
 
 bool Parser::CheckFuncCallParamsLoop(FuncCallCreator& creator) {
-    if(!tokens_.CompareTypeWithRollback(COMMA)) { return true; }
+    if(!tokens_.LookaheadType(COMMA)) { return true; }
     else {
         Expr expr;
         ParsingResult expr_res = ParseExpr(expr);
@@ -112,7 +112,7 @@ bool Parser::CheckBlock(InstructionBlock& body) {
 bool Parser::CheckBlockBody(InstructionBlock& body) {
     ParsingResult instr_res = ParseInstruction(body);
     if(instr_res == INCORRECT) { return false; }
-    if(!tokens_.CompareTypeWithRollback(NEWLINE)) {
+    if(!tokens_.LookaheadType(NEWLINE)) {
        if(instr_res == CORRECT) { return false; }
        return tokens_.NextTokenValueEqualsTo(KEYWORDS[1]);
     }
@@ -148,11 +148,11 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body) {
 }
 
 ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
-    if(tokens_.CompareValueWithRollback(KEYWORDS[6])) {
-        if(!tokens_.CompareTypeWithRollback(ID)) { return INCORRECT; }
+    if(tokens_.LookaheadValue(KEYWORDS[6])) {
+        if(!tokens_.LookaheadType(ID)) { return INCORRECT; }
         body.AddInstruction(PtrVisitable(new ReadInstr(tokens_.GetCurrentTokenValue(), current_line_)));
     }
-    if(tokens_.CompareValueWithRollback(KEYWORDS[5])) {
+    if(tokens_.LookaheadValue(KEYWORDS[5])) {
         Expr expr;
         if(ParseExpr(expr) != CORRECT) { return INCORRECT; }
         body.AddInstruction(PtrVisitable(new PrintInstr(expr, current_line_)));
@@ -162,8 +162,8 @@ ParsingResult Parser::ParseIOInstr(InstructionBlock& body) {
 }
 
 ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body) {
-    if(!tokens_.CompareValueWithRollback(KEYWORDS[2]) &&
-       !tokens_.CompareValueWithRollback(KEYWORDS[3]))
+    if(!tokens_.LookaheadValue(KEYWORDS[2]) &&
+       !tokens_.LookaheadValue(KEYWORDS[3]))
     {
         return NOT_MATCHED;
     }
@@ -172,7 +172,7 @@ ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body) {
     Expr left_expr;
     ParsingResult expr_res = ParseExpr(left_expr);
     if(expr_res == INCORRECT || expr_res == NOT_MATCHED) { return INCORRECT; }
-    if(!tokens_.NextTokenTypeEqualsTo(COMPARISON_CHAR)) { return INCORRECT; }
+    if(!tokens_.NextTokenTypeEqualsTo(COMPARISON_OP)) { return INCORRECT; }
     std::string comp_char = tokens_.GetCurrentTokenValue();
 
     Expr right_expr;
@@ -198,9 +198,9 @@ ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body) {
 
 ParsingResult Parser::ParseAssignment(InstructionBlock& body) {
     tokens_.FixPosition();
-    if(!tokens_.CompareTypeWithRollback(ID)) { return NOT_MATCHED; }
+    if(!tokens_.LookaheadType(ID)) { return NOT_MATCHED; }
     std::string id = tokens_.GetCurrentTokenValue();
-    if(!tokens_.CompareTypeWithRollback(ASSIGN_OP)) {
+    if(!tokens_.LookaheadType(ASSIGN_OP)) {
         tokens_.RollbackToFixedPosition();
         return NOT_MATCHED;
     }
@@ -213,7 +213,7 @@ ParsingResult Parser::ParseAssignment(InstructionBlock& body) {
 }
 
 ParsingResult Parser::ParseReturnExpr(InstructionBlock& body) {
-    if(!tokens_.CompareValueWithRollback(KEYWORDS[4])) { return NOT_MATCHED; }
+    if(!tokens_.LookaheadValue(KEYWORDS[4])) { return NOT_MATCHED; }
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr);
     if(expr_res != NOT_MATCHED) {
@@ -242,8 +242,8 @@ ParsingResult Parser::ParseExpr(Expr& expr) {
 }
 
 bool Parser::CheckExprLoop(Expr& expr) {
-    if(!tokens_.CompareTypeWithRollback(PLUS_OP) &&
-       !tokens_.CompareTypeWithRollback(MINUS_OP))
+    if(!tokens_.LookaheadType(PLUS_OP) &&
+       !tokens_.LookaheadType(MINUS_OP))
     {
         return true;
     }
@@ -267,8 +267,8 @@ ParsingResult Parser::ParseTerm(Term& term) {
 }
 
 bool Parser::CheckTermLoop(Term& term) {
-    if(!tokens_.CompareTypeWithRollback(MUL_OP) &&
-       !tokens_.CompareTypeWithRollback(DIV_OP))
+    if(!tokens_.LookaheadType(MUL_OP) &&
+       !tokens_.LookaheadType(DIV_OP))
     {
         return true;
     }
@@ -281,9 +281,9 @@ bool Parser::CheckTermLoop(Term& term) {
 }
 
 ParsingResult Parser::ParseFactor(Factor& factor) {
-    if(tokens_.CompareTypeWithRollback(MINUS_OP)) { factor.SetUnaryOperator("-"); }
-    if(tokens_.CompareTypeWithRollback(PLUS_OP)) { factor.SetUnaryOperator("+"); }
-    if(tokens_.CompareTypeWithRollback(NUMBER)) {
+    if(tokens_.LookaheadType(MINUS_OP)) { factor.SetUnaryOperator("-"); }
+    if(tokens_.LookaheadType(PLUS_OP)) { factor.SetUnaryOperator("+"); }
+    if(tokens_.LookaheadType(NUMBER)) {
         factor.SetFactExpr(PtrVisitable(new Number(tokens_.GetCurrentTokenValue())));
         return CORRECT;
     }
@@ -294,11 +294,11 @@ ParsingResult Parser::ParseFactor(Factor& factor) {
         factor.SetFactExpr(PtrVisitable(new FuncCall(func_call_creator.Create())));
         return CORRECT;
     }
-    if(tokens_.CompareTypeWithRollback(ID)) {
+    if(tokens_.LookaheadType(ID)) {
         factor.SetFactExpr(PtrVisitable(new Variable(tokens_.GetCurrentTokenValue(), current_line_)));
         return CORRECT;
     }
-    if(!tokens_.CompareTypeWithRollback(OPEN_BRACE)) { return NOT_MATCHED; }
+    if(!tokens_.LookaheadType(OPEN_BRACE)) { return NOT_MATCHED; }
     Expr expr;
     ParsingResult expr_res = ParseExpr(expr);
     if(expr_res != CORRECT) { return INCORRECT; }

@@ -6,7 +6,7 @@
 
 class Error {
 public:
-    enum ErrorType {SYNTAX_ER, DIVBYZERO_ER, UNDEFVAR_ER, UNDEFFUNC_ER, ARGNUMMISMATCH_ER, NOERRORS};
+    enum ErrorType {SYNTAX_ER, DIVBYZERO_ER, UNDEFVAR_ER, UNDEFFUNC_ER, ARGNUMMISMATCH_ER, FOPEN_ER, NOERRORS};
     Error() :
         last_error_type_(NOERRORS),
         last_error_line_(0)

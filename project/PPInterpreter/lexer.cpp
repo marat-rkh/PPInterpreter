@@ -5,6 +5,7 @@
 #include <fstream>
 #include <cstdio>
 #include <cctype>
+#include <algorithm>
 
 using std::string;
 using std::vector;
@@ -31,61 +32,60 @@ static const char SPACE = ' ';
 static const char TAB = '\t';
 static const char NLINE = '\n';
 
-//This function returns 0 if everything is fine.
-//If there is some lexical error in input file returns line number where the error occures
-//(line numbers begin with 1)
-//If there is a problem with file opening returns -1
-int Lexer::Tokenize(string const& file_name) {
+void Lexer::Tokenize(string const& file_name, Error& error) {
     input_.close();
     input_.open(file_name.c_str(), std::ios_base::in);
     if(!input_.is_open()) {
-        return -1;
+        error.Set(Error::FOPEN_ER, 0);
+        return;
     }
     while(!input_.eof()) {
         string line;
         std::getline(input_, line);
         if(!TryParseLine(line)) {
-            return current_line_;
+            error.Set(Error::SYNTAX_ER, current_line_);
+            return;
         }
         tokens_.push_back(Token(NEWLINE, string() + NLINE));
         ++current_line_;
     }
-    return 0;
 }
 
 bool Lexer::TryParseLine(string const& line) {
     string token_val;
     for(size_t i = 0; i != line.size(); ++i) {
-        TokenType type = DefineType(line[i]);
+        TokenType type = ParseSymbol(line[i]);
         if(type == UNKNOWN) { return false; }
-        if(type == ID) { token_val += line[i]; }
+        if(type == ID) {
+            token_val += line[i];
+            continue;
+        }
         //if current symbol is not a part of ID, KEYWORD or NUMBER tokens
-        else {
-            if(!TryParseCompositeToken(token_val)) { return false; }
-            token_val.clear();
-            if(type == WHITESPACE) { continue; }
-            //if current token is comment token begining
-            if(type == COMMENT) { return true; }
-            //if current token is 2 symbols comparison character
-            else if(type == COMPARISON_CHAR && (i + 1) != line.size() && line[i + 1] == ASSIGN) {
-                tokens_.push_back(Token(type, (string() + line[i]) + line[i + 1])); // conversation from char to string
+        if(!TryParseToken(token_val)) { return false; }
+        token_val.clear();
+        switch(type) {
+        case WHITESPACE:
+            continue;
+        case COMMENT:
+            return true;
+        case COMPARISON_OP:
+            if(i + 1 != line.size() && line[i + 1] == ASSIGN) {
+                tokens_.push_back(Token(type, (string() + line[i]) + line[i + 1]));
                 ++i;
+                break;
             }
-            //if current token is one symbol token
-            else {
-                //if current token is ASSIGN_OP
-                if(line[i] == ASSIGN) { type = ASSIGN_OP; }
-                tokens_.push_back(Token(type, string() + line[i]));
-            }
+        default:
+            if(line[i] == ASSIGN) { type = ASSIGN_OP; }
+            tokens_.push_back(Token(type, string() + line[i]));
         }
     }
-    if(!TryParseCompositeToken(token_val)) {
+    if(!TryParseToken(token_val)) {
         return false;
     }
     return true;
 }
 
-TokenType Lexer::DefineType(char symbol) {
+TokenType Lexer::ParseSymbol(char symbol) {
     if(isdigit(symbol) || isalpha(symbol) || symbol == UNDERSC) {
         return ID;
     }
@@ -102,7 +102,7 @@ TokenType Lexer::DefineType(char symbol) {
         return DIV_OP;
     }
     else if(symbol == GR || symbol == LESS || symbol == NOT || symbol == ASSIGN) {
-        return COMPARISON_CHAR;
+        return COMPARISON_OP;
     }
     else if(symbol == COL) {
         return COLUMN;
@@ -125,9 +125,9 @@ TokenType Lexer::DefineType(char symbol) {
     return UNKNOWN;
 }
 
-bool Lexer::TryParseCompositeToken(string const& token_value) {
+bool Lexer::TryParseToken(string const& token_value) {
     if(!token_value.empty()) {
-        TokenType token_type = DefineCompositeTokenType(token_value);
+        TokenType token_type = DetermineTokenType(token_value);
         if(token_type == UNKNOWN) {
             return false;
         }
@@ -136,37 +136,15 @@ bool Lexer::TryParseCompositeToken(string const& token_value) {
     return true;
 }
 
-TokenType Lexer::DefineCompositeTokenType(string const& token_value) {
+TokenType Lexer::DetermineTokenType(string const& token_value) {
     if(isalpha(token_value[0])) {
-        if(TokenIsKeyword(token_value)) {
+        if(std::find(KEYWORDS, KEYWORDS + KEYWORDS_NUMBER, token_value) != KEYWORDS + KEYWORDS_NUMBER) {
             return KEYWORD;
         }
         return ID;
     }
-    if(TokenIsNumber(token_value)) {
+    if(std::all_of(token_value.begin(), token_value.end(), isdigit)) {
         return NUMBER;
     }
     return UNKNOWN;
-}
-
-bool Lexer::TokenIsKeyword(string token_value) {
-    bool token_is_keyword = false;
-    for(size_t i = 0; i != KEYWORDS_NUMBER; ++i) {
-        if(token_value == KEYWORDS[i]) {
-            token_is_keyword = true;
-            break;
-        }
-    }
-    return token_is_keyword;
-}
-
-bool Lexer::TokenIsNumber(string token_value) {
-    bool token_is_number = true;
-    for(size_t i = 0; i != token_value.size(); ++i) {
-        if(!isdigit(token_value[i])) {
-            token_is_number = false;
-            break;
-        }
-    }
-    return token_is_number;
 }

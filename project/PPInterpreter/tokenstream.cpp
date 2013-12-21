@@ -1,6 +1,6 @@
 #include "tokenstream.h"
 
-bool TokenStream::CompareTypeWithRollback(TokenType type) {
+bool TokenStream::LookaheadType(TokenType type) {
     if(!NextTokenTypeEqualsTo(type)) {
         --current_pos_;
         return false;
@@ -8,7 +8,7 @@ bool TokenStream::CompareTypeWithRollback(TokenType type) {
     return true;
 }
 
-bool TokenStream::CompareValueWithRollback(string value) {
+bool TokenStream::LookaheadValue(string value) {
     if(!NextTokenValueEqualsTo(value)) {
         --current_pos_;
         return false;

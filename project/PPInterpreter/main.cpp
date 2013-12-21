@@ -36,13 +36,13 @@ int main(int argc, char** argv) {
     }
     string input_file_path = argv[1];
     Lexer lexer;
-    int res = lexer.Tokenize(input_file_path);
-    if(res < 0) {
-        cout << "error: can't open file" << endl;
+    Error error;
+    lexer.Tokenize(input_file_path, error);
+    if(error.IsOccured()) {
+        cout << error.GetErrorMessage() << endl;
         return 0;
     }
     Parser parser(lexer.tokens());
-    Error error;
     Program program(parser.Parse(error));
     if(error.IsOccured()) {
         cout << error.GetErrorMessage() << endl;
@@ -74,13 +74,10 @@ void PrintTokens(vector<Token>& tokens) {
 
 void TestLexer(std::string test_file, bool print) {
     Lexer lexer;
-    int res = lexer.Tokenize(test_file);
-    if(res < 0) {
-        cout << "Lexer: can't open file" << endl;
-        return;
-    }
-    if(res > 0) {
-        cout << "Lexer: lexing error at line: " << res << endl;
+    Error error;
+    lexer.Tokenize(test_file, error);
+    if(error.IsOccured()) {
+        cout << error.GetErrorMessage() << endl;
         return;
     }
     cout << "Lexer test successfully completed" << endl;
@@ -92,9 +89,9 @@ void TestLexer(std::string test_file, bool print) {
 
 void TestParser(std::string test_file) {
     Lexer lexer;
-    lexer.Tokenize(test_file);
-    Parser parser(lexer.tokens());
     Error error;
+    lexer.Tokenize(test_file, error);
+    Parser parser(lexer.tokens());
     parser.Parse(error);
     if(error.IsOccured()) {
         cout << error.GetErrorMessage() << endl;
@@ -105,9 +102,9 @@ void TestParser(std::string test_file) {
 
 void TestEvaluation(std::string test_file) {
     Lexer lexer;
-    lexer.Tokenize(test_file);
-    Parser parser(lexer.tokens());
     Error error;
+    lexer.Tokenize(test_file, error);
+    Parser parser(lexer.tokens());
     Program program(parser.Parse(error));
     if(error.IsOccured()) {
         cout << error.GetErrorMessage() << endl;

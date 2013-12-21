@@ -25,6 +25,8 @@ std::string Error::GetErrorMessage() {
         return prefix + "undefined function '" + additional_info_ + "'";
     case ARGNUMMISMATCH_ER:
         return prefix + "arguments number mismatch for '" + additional_info_ + "'";
+    case FOPEN_ER:
+        return "error: can't open file";
     }
     return "No errors occured";
 }
