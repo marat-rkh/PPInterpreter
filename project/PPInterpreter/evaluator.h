@@ -1,14 +1,13 @@
 #ifndef EVALUATOR_H
 #define EVALUATOR_H
 
-#include "visitor.h"
-
 #include <memory>
 #include <stack>
 
-#include "Visitables/visitable.h"
-#include "error.h"
 #include "defines.h"
+#include "ast.h"
+
+typedef std::map<std::string, PtrVisitable> Scope;
 
 class Evaluator : public Visitor {
 public:
@@ -45,12 +44,9 @@ private:
     bool return_instr_happened_;
 };
 
-typedef std::shared_ptr<Function> PtrFunc;
-typedef std::map<std::string, PtrFunc> GSFuncs;
-
-class GlobalScope {
+class FuncsScope {
 public:
-    static GSFuncs funcs;
+    static Scope funcs;
 };
 
 #endif // EVALUATOR_H

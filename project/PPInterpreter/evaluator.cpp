@@ -1,25 +1,10 @@
 #include "evaluator.h"
 
-#include "Visitables/program.h"
-#include "Visitables/function.h"
-#include "Visitables/instructionblock.h"
-#include "Visitables/assignment.h"
-#include "Visitables/funccall.h"
-#include "Visitables/printinstr.h"
-#include "Visitables/readinstr.h"
-#include "Visitables/returninstr.h"
-#include "Visitables/variable.h"
-#include "Visitables/condition.h"
-#include "Visitables/ifinstr.h"
-#include "Visitables/whileinstr.h"
-#include "Visitables/expr.h"
-#include "Visitables/term.h"
-#include "Visitables/factor.h"
-#include "Visitables/number.h"
+#include "ast.h"
 
 #include <iostream>
 
-GSFuncs GlobalScope::funcs;
+Scope FuncsScope::funcs;
 
 int Evaluator::visit(Program *c) {
     c->body().accept(*this);
@@ -72,12 +57,13 @@ int Evaluator::visit(Assignment *c) {
 }
 
 int Evaluator::visit(FuncCall *c) {
-    GSFuncs::iterator it = GlobalScope::funcs.find(c->id());
-    if(it == GlobalScope::funcs.end()) {
+    Scope::iterator it = FuncsScope::funcs.find(c->id());
+    if(it == FuncsScope::funcs.end()) {
         error_.Set(Error::UNDEFFUNC_ER, c->line_number(), c->id());
         return 0;
     }
-    std::vector<std::string> params_names((it->second)->params());
+    Function func(dynamic_cast<Function&>(*PtrVisitable(it->second)));
+    std::vector<std::string> params_names(func.params());
     if(params_names.size() != c->params().size()) {
         error_.Set(Error::ARGNUMMISMATCH_ER, c->line_number(), c->id());
         return 0;

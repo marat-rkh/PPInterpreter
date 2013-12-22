@@ -1,17 +1,6 @@
 #include "parser.h"
 #include "lexer.h"
 
-#include "Visitables/program.h"
-#include "Visitables/assignment.h"
-#include "Visitables/readinstr.h"
-#include "Visitables/printinstr.h"
-#include "Visitables/returninstr.h"
-#include "Visitables/factor.h"
-#include "Visitables/number.h"
-#include "Visitables/variable.h"
-#include "Visitables/ifinstr.h"
-#include "Visitables/whileinstr.h"
-
 Program Parser::Parse(vector<Token>& tokens) {
     InstructionBlock program_body;
     TokIterator it = tokens.begin();

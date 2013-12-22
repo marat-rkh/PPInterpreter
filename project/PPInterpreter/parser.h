@@ -7,11 +7,7 @@
 #include "lexer.h"
 #include "defines.h"
 #include "error.h"
-#include "Visitables/program.h"
-#include "Visitables/expr.h"
-#include "Visitables/term.h"
-#include "Visitables/funccall.h"
-#include "Visitables/function.h"
+#include "ast.h"
 #include "evaluator.h"
 
 using std::vector;
@@ -60,8 +56,8 @@ private:
     class FuncCreator {
     public:
         void CreateWithBody(InstructionBlock const& body) {
-            PtrFunc func(new Function(body, params, line_number));
-            GlobalScope::funcs.insert(std::pair<std::string, PtrFunc> (id, func));
+            PtrVisitable func(new Function(body, params, line_number));
+            FuncsScope::funcs.insert(std::pair<std::string, PtrVisitable> (id, func));
         }
         std::string id;
         size_t line_number;
