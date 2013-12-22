@@ -55,13 +55,17 @@ bool Lexer::TryParseLine(string const& line) {
     string token_val;
     for(size_t i = 0; i != line.size(); ++i) {
         TokenType type = ParseSymbol(line[i]);
-        if(type == UNKNOWN) { return false; }
+        if(type == UNKNOWN) {
+            return false;
+        }
         if(type == ID) {
             token_val += line[i];
             continue;
         }
         //if current symbol is not a part of ID, KEYWORD or NUMBER tokens
-        if(!TryParseToken(token_val)) { return false; }
+        if(!TryParseToken(token_val)) {
+            return false;
+        }
         token_val.clear();
         switch(type) {
         case WHITESPACE:
