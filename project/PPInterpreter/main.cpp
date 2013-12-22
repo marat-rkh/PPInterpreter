@@ -73,10 +73,9 @@ void PrintTokens(vector<Token>& tokens) {
 
 void TestLexer(std::string test_file, bool print) {
     Lexer lexer;
-    Error error;
-    lexer.Tokenize(test_file, error);
-    if(error.IsOccured()) {
-        cout << error.GetErrorMessage() << endl;
+    lexer.Tokenize(test_file);
+    if(lexer.IsErrorOccured()) {
+        cout << lexer.GetErrorMessage() << endl;
         return;
     }
     cout << "Lexer test successfully completed" << endl;
@@ -88,13 +87,12 @@ void TestLexer(std::string test_file, bool print) {
 
 void TestParser(std::string test_file) {
     Lexer lexer;
-    Error error;
-    lexer.Tokenize(test_file, error);
+    lexer.Tokenize(test_file);
     Parser parser;
     std::vector<Token> tokens = lexer.tokens();
-    parser.Parse(tokens, error);
-    if(error.IsOccured()) {
-        cout << error.GetErrorMessage() << endl;
+    parser.Parse(tokens);
+    if(parser.error_occured_) {
+        cout << "line " << parser.current_line_ << ": syntax error" << endl;
         return;
     }
     cout << "Parse test successfully completed" << endl;
@@ -102,15 +100,10 @@ void TestParser(std::string test_file) {
 
 void TestEvaluation(std::string test_file) {
     Lexer lexer;
-    Error error;
-    lexer.Tokenize(test_file, error);
+    lexer.Tokenize(test_file);
     Parser parser;
     std::vector<Token> tokens = lexer.tokens();
-    Program program(parser.Parse(tokens, error));
-    if(error.IsOccured()) {
-        cout << error.GetErrorMessage() << endl;
-        return;
-    }
+    Program program(parser.Parse(tokens));
     Evaluator eva;
     program.accept(eva);
     if(program.RuntimeErrorIsOccured()) {

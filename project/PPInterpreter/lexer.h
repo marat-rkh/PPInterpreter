@@ -42,9 +42,23 @@ static const size_t KEYWORDS_NUMBER = 7;
 
 class Lexer {
 public:
-    Lexer(): current_line_(1) {}
-    void Tokenize(string const& file_name, Error& error);
-    vector<Token> tokens() { return tokens_; }
+    Lexer(): current_line_(1), lexing_error_(false), fopen_error_(false) {}
+    void Tokenize(string const& file_name);
+    vector<Token> tokens() {
+        return tokens_;
+    }
+    bool IsErrorOccured() {
+        return lexing_error_ || fopen_error_;
+    }
+    std::string GetErrorMessage() {
+        if(lexing_error_) {
+            return "line " + std::to_string(current_line_) + ": syntax error";
+        }
+        else if(fopen_error_) {
+            return "can't open file";
+        }
+        return "no errors";
+    }
 
 private:
     DISABLE_COPY_AND_ASSIGN(Lexer);
@@ -57,6 +71,8 @@ private:
     fstream input_;
     vector<Token> tokens_;
     size_t current_line_;
+    bool lexing_error_;
+    bool fopen_error_;
 };
 
 #endif // LEXER_H

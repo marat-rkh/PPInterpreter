@@ -19,6 +19,8 @@
 
 #include <iostream>
 
+GSFuncs GlobalScope::funcs;
+
 int Evaluator::visit(Program *c) {
     c->body().accept(*this);
     if(error_.IsOccured()) {
@@ -70,8 +72,8 @@ int Evaluator::visit(Assignment *c) {
 }
 
 int Evaluator::visit(FuncCall *c) {
-    GSFuncs::iterator it = GlobalScope::GetInstance().gs_funcs.find(c->id());
-    if(it == GlobalScope::GetInstance().gs_funcs.end()) {
+    GSFuncs::iterator it = GlobalScope::funcs.find(c->id());
+    if(it == GlobalScope::funcs.end()) {
         error_.Set(Error::UNDEFFUNC_ER, c->line_number(), c->id());
         return 0;
     }

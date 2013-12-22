@@ -32,18 +32,18 @@ static const char SPACE = ' ';
 static const char TAB = '\t';
 static const char NLINE = '\n';
 
-void Lexer::Tokenize(string const& file_name, Error& error) {
+void Lexer::Tokenize(string const& file_name) {
     input_.close();
     input_.open(file_name.c_str(), std::ios_base::in);
     if(!input_.is_open()) {
-        error.Set(Error::FOPEN_ER, 0);
+        fopen_error_ = true;
         return;
     }
     while(!input_.eof()) {
         string line;
         std::getline(input_, line);
         if(!TryParseLine(line)) {
-            error.Set(Error::SYNTAX_ER, current_line_);
+            lexing_error_ = true;
             return;
         }
         tokens_.push_back(Token(NEWLINE, string() + NLINE));

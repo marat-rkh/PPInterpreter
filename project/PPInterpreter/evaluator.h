@@ -10,9 +10,6 @@
 #include "error.h"
 #include "defines.h"
 
-typedef std::shared_ptr<Function> PtrFunc;
-typedef std::map<std::string, PtrFunc> GSFuncs;
-
 class Evaluator : public Visitor {
 public:
     Evaluator():
@@ -53,15 +50,7 @@ typedef std::map<std::string, PtrFunc> GSFuncs;
 
 class GlobalScope {
 public:
-    static GlobalScope& GetInstance() {
-        static GlobalScope global_scope;
-        return global_scope;
-    }
-    GSFuncs gs_funcs;
-
-private:
-    GlobalScope(): gs_funcs() {}
-    DISABLE_COPY_AND_ASSIGN(GlobalScope);
+    static GSFuncs funcs;
 };
 
 #endif // EVALUATOR_H

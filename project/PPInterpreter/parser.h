@@ -21,8 +21,11 @@ typedef std::vector<Token>::iterator TokIterator;
 
 class Parser {
 public:
-    Parser(): current_line_(1) {}
-    Program Parse(vector<Token>& tokens, Error& error);
+    Parser(): current_line_(1), error_occured_(false) {}
+    Program Parse(vector<Token>& tokens);
+
+    size_t current_line_;
+    bool error_occured_;
 
 private:
     DISABLE_COPY_AND_ASSIGN(Parser);
@@ -30,15 +33,15 @@ private:
     ParsingResult ParseStmt(InstructionBlock& program_body, TokIterator& it);
     ParsingResult ParseFuncDecl(TokIterator& it);
 
-    class Creator;
-    ParsingResult ParseFuncHeader(bool (Parser::*ParamsChecker)(Creator&, TokIterator&),
-                                  Creator& creator,
-                                  TokIterator& it);
+    class FuncCreator;
+    class FuncCallCreator;
+    template<class T>
+    ParsingResult ParseFuncHeader(bool (Parser::*CheckParams)(T&, TokIterator&), T& cr, TokIterator& it);
 
-    bool CheckFuncDeclParams(Creator& creator, TokIterator& it);
-    bool CheckFuncDeclParamsLoop(Creator& creator, TokIterator& it);
-    bool CheckFuncCallParams(Creator& creator, TokIterator& it);
-    bool CheckFuncCallParamsLoop(Creator& creator, TokIterator& it);
+    bool CheckFuncDeclParams(FuncCreator& creator, TokIterator& it);
+    bool CheckFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it);
+    bool CheckFuncCallParams(FuncCallCreator& creator, TokIterator& it);
+    bool CheckFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it);
     bool CheckBlock(InstructionBlock& body, TokIterator& it);
     bool CheckBlockBody(InstructionBlock& body, TokIterator& it);
 
@@ -54,27 +57,24 @@ private:
     bool CheckTermLoop(Term& term, TokIterator& it);
     ParsingResult ParseFactor(Factor& term, TokIterator& it);
 
-    size_t current_line_;
-
-    class Creator {
+    class FuncCreator {
     public:
-        Creator() {}
-        void SetIDAndLine(std::string id, size_t line_num) {
-            id_ = id;
-            line_number_ = line_num;
-        }
-        void AddParam(Expr const& expr) { call_params_.push_back(expr); }
-        void AddParam(std::string param_name) { params_.push_back(param_name); }
-        FuncCall Create() { return FuncCall(id_, call_params_, line_number_); }
         void CreateWithBody(InstructionBlock const& body) {
-            PtrFunc func(new Function(body, params_, line_number_));
-            GlobalScope::GetInstance().gs_funcs.insert(std::pair<std::string, PtrFunc> (id_, func));
+            PtrFunc func(new Function(body, params, line_number));
+            GlobalScope::funcs.insert(std::pair<std::string, PtrFunc> (id, func));
         }
-    private:
-        std::string id_;
-        size_t line_number_;
-        std::vector<Expr> call_params_;
-        std::vector<std::string> params_;
+        std::string id;
+        size_t line_number;
+        std::vector<std::string> params;
+    };
+    class FuncCallCreator {
+    public:
+        FuncCall Create() {
+            return FuncCall(id, params, line_number);
+        }
+        std::string id;
+        size_t line_number;
+        std::vector<Expr> params;
     };
 };
 
