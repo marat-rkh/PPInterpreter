@@ -1,7 +1,7 @@
 #include "parser.h"
 #include "lexer.h"
 
-Program Parser::Parse(vector<Token>& tokens) {
+Program Parser::Parse(vector<Token> const& tokens) {
     InstructionBlock program_body;
     TokIterator it = tokens.begin();
     while(it != tokens.end()) {
@@ -28,20 +28,20 @@ ParsingResult Parser::ParseStmt(InstructionBlock& program_body, TokIterator& it)
 }
 
 ParsingResult Parser::ParseFuncDecl(TokIterator& it) {
-    if(it->value_ != KEYWORDS[0]) {
+    if(it->value_ != "def") {
         return NOT_MATCHED;
     }
     FuncCreator func_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncDeclParams, func_creator, ++it);
+    ParsingResult func_res = ParseFuncHeader(&Parser::ParseFuncDeclParams, func_creator, ++it);
     if(func_res != CORRECT) { return INCORRECT; }
     InstructionBlock body;
-    if(!CheckBlock(body, it)) { return INCORRECT; }
+    if(!ParseBlock(body, it)) { return INCORRECT; }
     func_creator.CreateWithBody(body);
     return CORRECT;
 }
 
 template<class T>
-ParsingResult Parser::ParseFuncHeader(bool (Parser::*CheckParams)(T&, TokIterator&), T& cr, TokIterator& it) {
+ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParseParams)(T&, TokIterator&), T& cr, TokIterator& it) {
     TokIterator it_copy(it);
     if(it_copy->type_ != ID) { return NOT_MATCHED; }
     cr.id = it_copy->value_;
@@ -49,22 +49,22 @@ ParsingResult Parser::ParseFuncHeader(bool (Parser::*CheckParams)(T&, TokIterato
     if((++it_copy)->type_ != OPEN_BRACE) {
         return NOT_MATCHED;
     }
-    if(!(this->*CheckParams)(cr, ++it_copy) || it_copy->type_ != CLOSE_BRACE) {
+    if(!(this->*ParseParams)(cr, ++it_copy) || it_copy->type_ != CLOSE_BRACE) {
         return INCORRECT;
     }
     it = ++it_copy;
     return CORRECT;
 }
 
-bool Parser::CheckFuncDeclParams(FuncCreator& creator, TokIterator& it) {
+bool Parser::ParseFuncDeclParams(FuncCreator& creator, TokIterator& it) {
     if(it->type_ != ID) {
         return true;
     }
     creator.params.push_back(it->value_);
-    return CheckFuncDeclParamsLoop(creator, ++it) ? true : false;
+    return ParseFuncDeclParamsLoop(creator, ++it) ? true : false;
 }
 
-bool Parser::CheckFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it) {
+bool Parser::ParseFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it) {
     if(it->type_ != COMMA) {
         return true;
     }
@@ -72,45 +72,45 @@ bool Parser::CheckFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it) {
         return false;
     }
     creator.params.push_back(it->value_);
-    return CheckFuncDeclParamsLoop(creator, it);
+    return ParseFuncDeclParamsLoop(creator, it);
 }
 
-bool Parser::CheckFuncCallParams(FuncCallCreator& creator, TokIterator& it) {
-    Expr expr;
+bool Parser::ParseFuncCallParams(FuncCallCreator& creator, TokIterator& it) {
+    ArithmExpr expr;
     ParsingResult expr_res = ParseExpr(expr, it);
     if(expr_res != CORRECT) {
         return expr_res == NOT_MATCHED;
     }
     creator.params.push_back(expr);
-    return CheckFuncCallParamsLoop(creator, it) ? true : false;
+    return ParseFuncCallParamsLoop(creator, it) ? true : false;
 }
 
-bool Parser::CheckFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it) {
+bool Parser::ParseFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it) {
     if(it->type_ != COMMA) {
         return true;
     }
     else {
-        Expr expr;
+        ArithmExpr expr;
         ParsingResult expr_res = ParseExpr(expr, ++it);
         if(expr_res != CORRECT) {
             return false;
         }
         creator.params.push_back(expr);
     }
-    return CheckFuncCallParamsLoop(creator, it);
+    return ParseFuncCallParamsLoop(creator, it);
 }
 
-bool Parser::CheckBlock(InstructionBlock& body, TokIterator& it) {
+bool Parser::ParseBlock(InstructionBlock& body, TokIterator& it) {
     if(it->type_ != COLUMN ||
        (++it)->type_ !=NEWLINE)
     {
         return false;
     }
     ++current_line_;
-    return CheckBlockBody(body, ++it);
+    return ParseBlockBody(body, ++it);
 }
 
-bool Parser::CheckBlockBody(InstructionBlock& body, TokIterator& it) {
+bool Parser::ParseBlockBody(InstructionBlock& body, TokIterator& it) {
     ParsingResult instr_res = ParseInstruction(body, it);
     if(instr_res == INCORRECT) {
         return false;
@@ -119,10 +119,10 @@ bool Parser::CheckBlockBody(InstructionBlock& body, TokIterator& it) {
        if(instr_res == CORRECT) {
            return false;
        }
-       return (it++)->value_ == KEYWORDS[1];
+       return (it++)->value_ =="end";
     }
     ++current_line_;
-    return CheckBlockBody(body, ++it);
+    return ParseBlockBody(body, ++it);
 }
 
 ParsingResult Parser::ParseInstruction(InstructionBlock& body, TokIterator& it) {
@@ -139,7 +139,7 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body, TokIterator& it) 
         return assign_res == CORRECT ? CORRECT : INCORRECT;
     }
     FuncCallCreator func_call_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator, it);
+    ParsingResult func_res = ParseFuncHeader(&Parser::ParseFuncCallParams, func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res == INCORRECT) {
             return INCORRECT;
@@ -155,15 +155,15 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body, TokIterator& it) 
 }
 
 ParsingResult Parser::ParseIOInstr(InstructionBlock& body, TokIterator& it) {
-    if(it->value_ == KEYWORDS[6]) {
+    if(it->value_ == "read") {
         if((++it)->type_ != ID) {
             return INCORRECT;
         }
         body.AddInstruction(PtrVisitable(new ReadInstr((it++)->value_, current_line_)));
         return CORRECT;
     }
-    if(it->value_ == KEYWORDS[5]) {
-        Expr expr;
+    if(it->value_ == "print") {
+        ArithmExpr expr;
         if(ParseExpr(expr, ++it) != CORRECT) {
             return INCORRECT;
         }
@@ -174,13 +174,13 @@ ParsingResult Parser::ParseIOInstr(InstructionBlock& body, TokIterator& it) {
 }
 
 ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body, TokIterator& it) {
-    if(it->value_ != KEYWORDS[2] &&
-       it->value_ != KEYWORDS[3])
+    if(it->value_ != "if" &&
+            it->value_ != "while")
     {
         return NOT_MATCHED;
     }
     std::string instruction_type = it->value_;
-    Expr left_expr;
+    ArithmExpr left_expr;
     ParsingResult expr_res = ParseExpr(left_expr, ++it);
     if(expr_res == INCORRECT || expr_res == NOT_MATCHED) {
         return INCORRECT;
@@ -190,12 +190,12 @@ ParsingResult Parser::ParseControlFlowInstr(InstructionBlock& body, TokIterator&
     }
     std::string comp_char = it->value_;
 
-    Expr right_expr;
+    ArithmExpr right_expr;
     expr_res = ParseExpr(right_expr, ++it);
     InstructionBlock cf_instr_body;
     if(expr_res == INCORRECT ||
        expr_res == NOT_MATCHED ||
-       !CheckBlock(cf_instr_body, it))
+       !ParseBlock(cf_instr_body, it))
     {
         return INCORRECT;
     }
@@ -220,28 +220,28 @@ ParsingResult Parser::ParseAssignment(InstructionBlock& body, TokIterator& it) {
     if((++it_copy)->type_ != ASSIGN_OP) {
         return NOT_MATCHED;
     }
-    Expr expr;
+    ArithmExpr expr;
     ParsingResult expr_res = ParseExpr(expr, ++it_copy);
     if(expr_res == INCORRECT) {
         return INCORRECT;
     }
-    Assignment assign(id, PtrVisitable(new Expr(expr)), current_line_);
+    Assignment assign(id, PtrVisitable(new ArithmExpr(expr)), current_line_);
     body.AddInstruction(PtrVisitable(new Assignment(assign)));
     it = it_copy;
     return CORRECT;
 }
 
 ParsingResult Parser::ParseReturnExpr(InstructionBlock& body, TokIterator& it) {
-    if(it->value_ != KEYWORDS[4]) {
+    if(it->value_ != "return") {
         return NOT_MATCHED;
     }
-    Expr expr;
+    ArithmExpr expr;
     ParsingResult expr_res = ParseExpr(expr, ++it);
     if(expr_res != NOT_MATCHED) {
         if(expr_res == INCORRECT) {
             return INCORRECT;
         }
-        ReturnInstr ri(PtrVisitable(new Expr(expr)));
+        ReturnInstr ri(PtrVisitable(new ArithmExpr(expr)));
         body.AddInstruction(PtrVisitable(new ReturnInstr(ri)));
         return CORRECT;
     }
@@ -251,34 +251,34 @@ ParsingResult Parser::ParseReturnExpr(InstructionBlock& body, TokIterator& it) {
     return CORRECT;
 }
 
-ParsingResult Parser::ParseExpr(Expr& expr, TokIterator& it) {
+ParsingResult Parser::ParseExpr(ArithmExpr& expr, TokIterator& it) {
     expr.SetLineNumber(current_line_);
-    Term term;
+    ArithmExpr term;
     ParsingResult term_res = ParseTerm(term, it);
     if(term_res != CORRECT) {
         return term_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
     }
-    expr.AddTerm(term);
-    return CheckExprLoop(expr, it) ? CORRECT : INCORRECT;
+    expr.AddElem(PtrVisitable(new ArithmExpr(term)));
+    return ParseExprLoop(expr, it) ? CORRECT : INCORRECT;
 }
 
-bool Parser::CheckExprLoop(Expr& expr, TokIterator& it) {
+bool Parser::ParseExprLoop(ArithmExpr& expr, TokIterator& it) {
     if(it->type_ != PLUS_OP &&
        it->type_ != MINUS_OP)
     {
         return true;
     }
     expr.AddOperation(it->value_);
-    Term term;
+    ArithmExpr term;
     ParsingResult term_res = ParseTerm(term, ++it);
     if(term_res != CORRECT) {
         return false;
     }
-    expr.AddTerm(term);
-    return CheckExprLoop(expr, it);
+    expr.AddElem(PtrVisitable(new ArithmExpr(term)));
+    return ParseExprLoop(expr, it);
 }
 
-ParsingResult Parser::ParseTerm(Term& term, TokIterator& it) {
+ParsingResult Parser::ParseTerm(ArithmExpr& term, TokIterator& it) {
     term.SetLineNumber(current_line_);
     Factor factor;
     ParsingResult fact_res = ParseFactor(factor, it);
@@ -286,10 +286,10 @@ ParsingResult Parser::ParseTerm(Term& term, TokIterator& it) {
         return fact_res == NOT_MATCHED ? NOT_MATCHED : INCORRECT;
     }
     term.AddElem(PtrVisitable(new Factor(factor)));
-    return CheckTermLoop(term, it) ? CORRECT : INCORRECT;
+    return ParseTermLoop(term, it) ? CORRECT : INCORRECT;
 }
 
-bool Parser::CheckTermLoop(Term& term, TokIterator& it) {
+bool Parser::ParseTermLoop(ArithmExpr& term, TokIterator& it) {
     if(it->type_ != MUL_OP &&
        it->type_ != DIV_OP)
     {
@@ -302,25 +302,32 @@ bool Parser::CheckTermLoop(Term& term, TokIterator& it) {
         return false;
     }
     term.AddElem(PtrVisitable(new Factor(factor)));
-    return CheckTermLoop(term, it);
+    return ParseTermLoop(term, it);
 }
 
 ParsingResult Parser::ParseFactor(Factor& factor, TokIterator& it) {
     if(it->type_ == MINUS_OP) {
-        factor.SetUnaryOperator("-");
-        ++it;
-    }
-    else if(it->type_ == PLUS_OP) {
-        factor.SetUnaryOperator("+");
+        factor.SetUnaryMinus();
         ++it;
     }
     if(it->type_ == NUMBER) {
-        factor.SetFactExpr(PtrVisitable(new Number(it->value_)));
-        ++it;
+        factor.SetFactExpr(PtrVisitable(new Number((it++)->value_)));
         return CORRECT;
     }
+    ParsingResult func_call_res = ParseFactorFuncCall(factor, it);
+    if(func_call_res != NOT_MATCHED) {
+        return func_call_res;
+    }
+    if(it->type_ == ID) {
+        factor.SetFactExpr(PtrVisitable(new Variable((it++)->value_, current_line_)));
+        return CORRECT;
+    }
+    return ParseExprInParanthesis(factor, it);
+}
+
+ParsingResult Parser::ParseFactorFuncCall(Factor &factor, TokIterator &it) {
     FuncCallCreator func_call_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::CheckFuncCallParams, func_call_creator, it);
+    ParsingResult func_res = ParseFuncHeader(&Parser::ParseFuncCallParams, func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res != CORRECT) {
             return INCORRECT;
@@ -328,19 +335,18 @@ ParsingResult Parser::ParseFactor(Factor& factor, TokIterator& it) {
         factor.SetFactExpr(PtrVisitable(new FuncCall(func_call_creator.Create())));
         return CORRECT;
     }
-    if(it->type_ == ID) {
-        factor.SetFactExpr(PtrVisitable(new Variable(it->value_, current_line_)));
-        ++it;
-        return CORRECT;
-    }
+    return NOT_MATCHED;
+}
+
+ParsingResult Parser::ParseExprInParanthesis(Factor &factor, TokIterator &it) {
     if(it->type_ != OPEN_BRACE) {
         return NOT_MATCHED;
     }
-    Expr expr;
+    ArithmExpr expr;
     ParsingResult expr_res = ParseExpr(expr, ++it);
     if(expr_res != CORRECT) {
         return INCORRECT;
     }
-    factor.SetFactExpr(PtrVisitable(new Expr(expr)));
+    factor.SetFactExpr(PtrVisitable(new ArithmExpr(expr)));
     return ((it++)->type_ == CLOSE_BRACE) ? CORRECT : INCORRECT;
 }

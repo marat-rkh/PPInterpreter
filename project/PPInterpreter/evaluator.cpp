@@ -186,7 +186,21 @@ int Evaluator::visit(WhileInstr *c) {
     return 0;
 }
 
-int Evaluator::visit(Expr *c) {
+int Evaluator::visit(ArithmExpr *c) {
+    if(c->operations().size() != 0) {
+        if(c->operations()[0] == "*" || c->operations()[0] == "/") {
+            return VisitTerm(c);
+        }
+        return VisitExpr(c);
+    }
+    int value = (c->elements()[0])->accept(*this);
+    if(error_.IsOccured()) {
+        return 0;
+    }
+    return value;
+}
+
+int Evaluator::VisitExpr(ArithmExpr *c) {
     int result = 0;
     std::string operation = "+";
     c->operations().push_back("+");
@@ -206,7 +220,7 @@ int Evaluator::visit(Expr *c) {
     return result;
 }
 
-int Evaluator::visit(Term *c) {
+int Evaluator::VisitTerm(ArithmExpr *c) {
     int result = 1;
     std::string operation = "*";
     c->operations().push_back("*");
@@ -235,7 +249,7 @@ int Evaluator::visit(Factor *c) {
     if(error_.IsOccured()) {
         return 0;
     }
-    if(c->unary_operator() == "-") {
+    if(c->unary_minus_set()) {
         return -1 * value;
     }
     return value;

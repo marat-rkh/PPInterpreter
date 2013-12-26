@@ -13,12 +13,12 @@
 using std::vector;
 
 enum ParsingResult {CORRECT, INCORRECT, NOT_MATCHED};
-typedef std::vector<Token>::iterator TokIterator;
+typedef std::vector<Token>::const_iterator TokIterator;
 
 class Parser {
 public:
     Parser(): current_line_(1), error_occured_(false) {}
-    Program Parse(vector<Token>& tokens);
+    Program Parse(vector<Token> const& tokens);
 
     size_t current_line_;
     bool error_occured_;
@@ -32,14 +32,14 @@ private:
     class FuncCreator;
     class FuncCallCreator;
     template<class T>
-    ParsingResult ParseFuncHeader(bool (Parser::*CheckParams)(T&, TokIterator&), T& cr, TokIterator& it);
+    ParsingResult ParseFuncHeader(bool (Parser::*ParseParams)(T&, TokIterator&), T& cr, TokIterator& it);
 
-    bool CheckFuncDeclParams(FuncCreator& creator, TokIterator& it);
-    bool CheckFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it);
-    bool CheckFuncCallParams(FuncCallCreator& creator, TokIterator& it);
-    bool CheckFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it);
-    bool CheckBlock(InstructionBlock& body, TokIterator& it);
-    bool CheckBlockBody(InstructionBlock& body, TokIterator& it);
+    bool ParseFuncDeclParams(FuncCreator& creator, TokIterator& it);
+    bool ParseFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it);
+    bool ParseFuncCallParams(FuncCallCreator& creator, TokIterator& it);
+    bool ParseFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it);
+    bool ParseBlock(InstructionBlock& body, TokIterator& it);
+    bool ParseBlockBody(InstructionBlock& body, TokIterator& it);
 
     ParsingResult ParseInstruction(InstructionBlock& body, TokIterator& it);
     ParsingResult ParseIOInstr(InstructionBlock& body, TokIterator& it);
@@ -47,11 +47,14 @@ private:
     ParsingResult ParseAssignment(InstructionBlock& body, TokIterator& it);
     ParsingResult ParseReturnExpr(InstructionBlock& body, TokIterator& it);
 
-    ParsingResult ParseExpr(Expr& expr, TokIterator& it);
-    bool CheckExprLoop(Expr& expr, TokIterator& it);
-    ParsingResult ParseTerm(Term& term, TokIterator& it);
-    bool CheckTermLoop(Term& term, TokIterator& it);
+    ParsingResult ParseExpr(ArithmExpr& expr, TokIterator& it);
+    bool ParseExprLoop(ArithmExpr& expr, TokIterator& it);
+    ParsingResult ParseTerm(ArithmExpr& term, TokIterator& it);
+    bool ParseTermLoop(ArithmExpr& term, TokIterator& it);
+
     ParsingResult ParseFactor(Factor& term, TokIterator& it);
+    ParsingResult ParseExprInParanthesis(Factor& factor, TokIterator& it);
+    ParsingResult ParseFactorFuncCall(Factor& factor, TokIterator& it);
 
     class FuncCreator {
     public:
@@ -70,7 +73,7 @@ private:
         }
         std::string id;
         size_t line_number;
-        std::vector<Expr> params;
+        std::vector<ArithmExpr> params;
     };
 };
 

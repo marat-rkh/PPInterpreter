@@ -46,7 +46,7 @@ class InstructionBlock : public Visitable {
     }
     std::vector<PtrVisitable>& instructions() { return instructions_; }
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   private:
     std::vector<PtrVisitable> instructions_;
@@ -69,7 +69,7 @@ class Function : public Visitable {
     }
     std::vector<std::string>& params() { return params_; }
     InstructionBlock& body() { return body_; }
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   private:
     std::vector<std::string> params_;
@@ -90,29 +90,11 @@ class ArithmExpr : public Visitable {
     std::vector<std::string>& operations() { return operations_; }
     std::vector<PtrVisitable>& elements() { return elements_; }
 
-    int accept(Visitor &v) = 0;
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   protected:
     std::vector<std::string> operations_;
     std::vector<PtrVisitable> elements_;
-};
-
-class Term : public ArithmExpr {
-public:
-    Term() {}
-    Term(Term const& t): ArithmExpr(t) {}
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
-};
-
-class Expr : public ArithmExpr {
-public:
-    Expr() {}
-    Expr(Expr const& e): ArithmExpr(e) {}
-    void AddTerm(Term const& t) {
-        elements_.push_back(PtrVisitable(new Term(t)));
-    }
-
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
 };
 
 class Number : public Visitable {
@@ -120,7 +102,7 @@ public:
     Number(int val): value_(val) {}
     Number(std::string const& num) { value_ = atoi(num.c_str()); }
     int value() { return value_; }
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
 private:
     int value_;
@@ -141,7 +123,7 @@ class Assignment : public Visitable {
     std::string& id() { return id_; }
     PtrVisitable& expr() { return expr_; }
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   private:
     std::string id_;
@@ -150,28 +132,28 @@ class Assignment : public Visitable {
 
 class Factor : public Visitable {
 public:
-    Factor() {}
+    Factor(): unary_minus_set_(false) {}
     Factor(Factor const& f):
         Visitable(f),
-        unary_operator_(f.unary_operator_),
+        unary_minus_set_(false),
         fact_expr_(f.fact_expr_)
     {}
     void SetFactExpr(PtrVisitable const& fact_expr) {
         fact_expr_ = fact_expr;
     }
-    void SetUnaryOperator(std::string const& uo) { unary_operator_ = uo; }
-    std::string const& unary_operator() { return unary_operator_; }
+    void SetUnaryMinus() { unary_minus_set_ = true; }
+    bool unary_minus_set() { return unary_minus_set_; }
     PtrVisitable const& fact_expr() { return fact_expr_; }
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
 private:
-    std::string unary_operator_;
+    bool unary_minus_set_;
     PtrVisitable fact_expr_;
 };
 
 class FuncCall : public Visitable {
   public:
-    FuncCall(std::string& id, std::vector<Expr>& params, size_t line_num):
+    FuncCall(std::string& id, std::vector<ArithmExpr>& params, size_t line_num):
         Visitable(line_num),
         id_(id),
         params_(params)
@@ -182,13 +164,13 @@ class FuncCall : public Visitable {
         params_(fc.params_)
     {}
     std::string& id() { return id_; }
-    std::vector<Expr>& params() { return params_; }
+    std::vector<ArithmExpr>& params() { return params_; }
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   private:
     std::string id_;
-    std::vector<Expr> params_;
+    std::vector<ArithmExpr> params_;
 };
 
 class PrintInstr : public Visitable {
@@ -197,15 +179,15 @@ class PrintInstr : public Visitable {
     PrintInstr(PtrVisitable expr):
         expr_(expr)
     {}
-    PrintInstr(Expr const& expr, size_t line_num):
+    PrintInstr(ArithmExpr const& expr, size_t line_num):
         Visitable(line_num),
-        expr_(PtrVisitable(new Expr(expr)))
+        expr_(PtrVisitable(new ArithmExpr(expr)))
     {}
-    void SetExpr(Expr const& expr) {
-        expr_ = PtrVisitable(new Expr(expr));
+    void SetExpr(ArithmExpr const& expr) {
+        expr_ = PtrVisitable(new ArithmExpr(expr));
     }
     PtrVisitable& expr() { return expr_; }
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   private:
     PtrVisitable expr_;
@@ -222,7 +204,7 @@ public:
         id_(ri.id_) {}
     std::string& id() { return id_; }
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
 private:
     std::string id_;
@@ -237,7 +219,7 @@ class ReturnInstr : public Visitable {
     {}
     PtrVisitable& expr() { return expr_; }
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   private:
     PtrVisitable expr_;
@@ -251,7 +233,7 @@ class Variable : public Visitable {
     {}
     std::string& id() { return id_; }
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   private:
     std::string id_;
@@ -260,7 +242,7 @@ class Variable : public Visitable {
 class Condition : public Visitable {
   public:
     Condition() {}
-    Condition(Expr e1, Expr e2, std::string comp_char):
+    Condition(ArithmExpr e1, ArithmExpr e2, std::string comp_char):
         Visitable(),
         e1_(e1),
         e2_(e2),
@@ -273,15 +255,15 @@ class Condition : public Visitable {
         comp_char_(c.comp_char_)
     {}
 
-    Expr& e1() { return e1_; }
-    Expr& e2() { return e2_; }
+    ArithmExpr& e1() { return e1_; }
+    ArithmExpr& e2() { return e2_; }
     std::string& comp_char() { return comp_char_; }
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
   private:
-    Expr e1_;
-    Expr e2_;
+    ArithmExpr e1_;
+    ArithmExpr e2_;
     std::string comp_char_;
 };
 
@@ -318,7 +300,7 @@ class IfInstr : public ControlFlowInstr {
         ControlFlowInstr(ii)
     {}
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 };
 
 class WhileInstr: public ControlFlowInstr {
@@ -327,7 +309,7 @@ class WhileInstr: public ControlFlowInstr {
         ControlFlowInstr(c, body)
     {}
     WhileInstr(WhileInstr const& wi): ControlFlowInstr(wi) {}
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 };
 
 class Program: public Visitable {
@@ -349,7 +331,7 @@ class Program: public Visitable {
     bool RuntimeErrorIsOccured() { return error_.IsOccured(); }
     std::string GetErrorMessage() { return error_.GetErrorMessage(); }
 
-    /*virtual*/int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) { return v.visit(this); }
 
 private:
     InstructionBlock body_;
