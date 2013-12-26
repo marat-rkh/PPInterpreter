@@ -32,7 +32,7 @@ ParsingResult Parser::ParseFuncDecl(TokIterator& it) {
         return NOT_MATCHED;
     }
     FuncCreator func_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::ParseFuncDeclParams, func_creator, ++it);
+    ParsingResult func_res = ParseFuncDeclHeader(func_creator, ++it);
     if(func_res != CORRECT) { return INCORRECT; }
     InstructionBlock body;
     if(!ParseBlock(body, it)) { return INCORRECT; }
@@ -40,17 +40,27 @@ ParsingResult Parser::ParseFuncDecl(TokIterator& it) {
     return CORRECT;
 }
 
+ParsingResult Parser::ParseFuncDeclHeader(FuncCreator& cr, TokIterator& it) {
+    if(ParseFuncName(cr, it) == NOT_MATCHED) {
+        return NOT_MATCHED;
+    }
+    if(!ParseFuncDeclParams(cr, it) || it->type_ != CLOSE_BRACE) {
+        return INCORRECT;
+    }
+    ++it;
+    return CORRECT;
+}
+
 template<class T>
-ParsingResult Parser::ParseFuncHeader(bool (Parser::*ParseParams)(T&, TokIterator&), T& cr, TokIterator& it) {
+ParsingResult Parser::ParseFuncName(T& cr, TokIterator& it) {
     TokIterator it_copy(it);
-    if(it_copy->type_ != ID) { return NOT_MATCHED; }
+    if(it_copy->type_ != ID) {
+        return NOT_MATCHED;
+    }
     cr.id = it_copy->value_;
     cr.line_number = current_line_;
     if((++it_copy)->type_ != OPEN_BRACE) {
         return NOT_MATCHED;
-    }
-    if(!(this->*ParseParams)(cr, ++it_copy) || it_copy->type_ != CLOSE_BRACE) {
-        return INCORRECT;
     }
     it = ++it_copy;
     return CORRECT;
@@ -73,6 +83,17 @@ bool Parser::ParseFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it) {
     }
     creator.params.push_back(it->value_);
     return ParseFuncDeclParamsLoop(creator, it);
+}
+
+ParsingResult Parser::ParseFuncCallHeader(FuncCallCreator& cr, TokIterator& it) {
+    if(ParseFuncName(cr, it) == NOT_MATCHED) {
+        return NOT_MATCHED;
+    }
+    if(!ParseFuncCallParams(cr, it) || it->type_ != CLOSE_BRACE) {
+        return INCORRECT;
+    }
+    ++it;
+    return CORRECT;
 }
 
 bool Parser::ParseFuncCallParams(FuncCallCreator& creator, TokIterator& it) {
@@ -139,7 +160,7 @@ ParsingResult Parser::ParseInstruction(InstructionBlock& body, TokIterator& it) 
         return assign_res == CORRECT ? CORRECT : INCORRECT;
     }
     FuncCallCreator func_call_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::ParseFuncCallParams, func_call_creator, it);
+    ParsingResult func_res = ParseFuncCallHeader(func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res == INCORRECT) {
             return INCORRECT;
@@ -327,7 +348,7 @@ ParsingResult Parser::ParseFactor(Factor& factor, TokIterator& it) {
 
 ParsingResult Parser::ParseFactorFuncCall(Factor &factor, TokIterator &it) {
     FuncCallCreator func_call_creator;
-    ParsingResult func_res = ParseFuncHeader(&Parser::ParseFuncCallParams, func_call_creator, it);
+    ParsingResult func_res = ParseFuncCallHeader(func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res != CORRECT) {
             return INCORRECT;

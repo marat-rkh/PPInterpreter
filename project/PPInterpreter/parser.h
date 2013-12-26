@@ -31,11 +31,13 @@ private:
 
     class FuncCreator;
     class FuncCallCreator;
+    ParsingResult ParseFuncDeclHeader(FuncCreator& cr, TokIterator& it);
     template<class T>
-    ParsingResult ParseFuncHeader(bool (Parser::*ParseParams)(T&, TokIterator&), T& cr, TokIterator& it);
-
+    ParsingResult ParseFuncName(T& cr, TokIterator& it);
     bool ParseFuncDeclParams(FuncCreator& creator, TokIterator& it);
     bool ParseFuncDeclParamsLoop(FuncCreator& creator, TokIterator& it);
+
+    ParsingResult ParseFuncCallHeader(FuncCallCreator& cr, TokIterator& it);
     bool ParseFuncCallParams(FuncCallCreator& creator, TokIterator& it);
     bool ParseFuncCallParamsLoop(FuncCallCreator& creator, TokIterator& it);
     bool ParseBlock(InstructionBlock& body, TokIterator& it);

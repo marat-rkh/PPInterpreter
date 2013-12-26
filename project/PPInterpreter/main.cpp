@@ -23,36 +23,36 @@ int main(int argc, char** argv) {
 //    string test_file = "../../tests/test_arithm_expr1";
 //    string test_file = "../../tests/test_parser2";
 //    string test_file = "../../tests/test_lexer1";
-    string test_file = "../../tests/test_eval1";
+//    string test_file = "../../tests/test_eval1";
 
-    TestLexer(test_file, false);
-    TestParser(test_file);
-    TestEvaluation(test_file);
+//    TestLexer(test_file, false);
+//    TestParser(test_file);
+//    TestEvaluation(test_file);
 
-//    if(argc != 2) {
-//        cout << "error: incorrect arguments" << endl;
-//        return 1;
-//    }
-//    string input_file_path = argv[1];
-//    Lexer lexer;
-//    lexer.Tokenize(input_file_path);
-//    if(lexer.IsErrorOccured()) {
-//        cout << lexer.GetErrorMessage() << endl;
-//        return 1;
-//    }
-//    std::vector<Token> tokens = lexer.tokens();
-//    Parser parser;
-//    Program program(parser.Parse(tokens));
-//    if(parser.error_occured_) {
-//        cout << "line " << parser.current_line_ << ": syntax error" << endl;
-//        return 1;
-//    }
-//    Evaluator eva;
-//    program.accept(eva);
-//    if(program.RuntimeErrorIsOccured()) {
-//        cout << program.GetErrorMessage() << endl;
-//        return 1;
-//    }
+    if(argc != 2) {
+        cout << "error: incorrect arguments" << endl;
+        return 1;
+    }
+    string input_file_path = argv[1];
+    Lexer lexer;
+    lexer.Tokenize(input_file_path);
+    if(lexer.IsErrorOccured()) {
+        cout << lexer.GetErrorMessage() << endl;
+        return 1;
+    }
+    std::vector<Token> tokens = lexer.tokens();
+    Parser parser;
+    Program program(parser.Parse(tokens));
+    if(parser.error_occured_) {
+        cout << "line " << parser.current_line_ << ": syntax error" << endl;
+        return 1;
+    }
+    Evaluator eva;
+    program.accept(eva);
+    if(program.RuntimeErrorIsOccured()) {
+        cout << program.GetErrorMessage() << endl;
+        return 1;
+    }
     return 0;
 }
 
