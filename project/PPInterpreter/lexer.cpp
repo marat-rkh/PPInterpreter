@@ -12,43 +12,43 @@ using std::string;
 using std::vector;
 using std::fstream;
 
-//arithmetic operators
-static const char PLUS = '+';
-static const char MINUS = '-';
-static const char MUL = '*';
-static const char DIV = '/';
-//comparison characters parts
-static const char GR = '>';
-static const char LESS = '<';
-static const char NOT = '!';
-//other symbols
+static const std::map<char, TokenType> tok_types = {
+    {'_', ID},
+    {'+', PLUS_OP},
+    {'-', MINUS_OP},
+    {'*', MUL_OP},
+    {'/', DIV_OP},
+    {'>', COMPARISON_OP},
+    {'<', COMPARISON_OP},
+    {'!', COMPARISON_OP},
+    {'=', COMPARISON_OP},
+    {':', COLUMN},
+    {',', COMMA},
+    {'(', OPEN_BRACE},
+    {')', CLOSE_BRACE},
+    {'#', COMMENT},
+    {' ', WHITESPACE},
+    {'\t', WHITESPACE},
+};
+
 static const char ASSIGN = '=';
-static const char COL = ':';
-static const char COM = ',';
-static const char SHARP = '#';
-static const char OPEN_BR = '(';
-static const char CLOSE_BR = ')';
-static const char UNDERSC = '_';
-static const char SPACE = ' ';
-static const char TAB = '\t';
 static const char NLINE = '\n';
 
 void Lexer::Tokenize(string const& file_name) {
     input_.close();
     tokens_.empty();
     current_line_ = 1;
-    lexing_error_= false;
-    fopen_error_ = false;
+    error_.empty();
     input_.open(file_name.c_str(), std::ios_base::in);
     if(!input_.is_open()) {
-        fopen_error_ = true;
+        error_ = "fopen_error";
         return;
     }
     while(!input_.eof()) {
         string line;
         std::getline(input_, line);
         if(!TryParseLine(line)) {
-            lexing_error_ = true;
+            error_ = "syntax_error";
             return;
         }
         tokens_.push_back(Token(NEWLINE, string() + NLINE));
@@ -92,43 +92,11 @@ bool Lexer::TryParseLine(string const& line) {
 }
 
 TokenType Lexer::ParseSymbol(char symbol) {
-    if(isdigit(symbol) || isalpha(symbol) || symbol == UNDERSC) {
+    if(isdigit(symbol) || isalpha(symbol)) {
         return ID;
     }
-    else if(symbol == PLUS) {
-        return PLUS_OP;
-    }
-    else if(symbol == MINUS) {
-        return MINUS_OP;
-    }
-    else if(symbol == MUL) {
-        return MUL_OP;
-    }
-    else if(symbol == DIV) {
-        return DIV_OP;
-    }
-    else if(symbol == GR || symbol == LESS || symbol == NOT || symbol == ASSIGN) {
-        return COMPARISON_OP;
-    }
-    else if(symbol == COL) {
-        return COLUMN;
-    }
-    else if(symbol == COM) {
-        return COMMA;
-    }
-    else if(symbol == OPEN_BR) {
-        return OPEN_BRACE;
-    }
-    else if(symbol == CLOSE_BR) {
-        return CLOSE_BRACE;
-    }
-    else if(symbol == SHARP) {
-        return COMMENT;
-    }
-    else if(symbol == TAB || symbol == SPACE) {
-        return WHITESPACE;
-    }
-    return UNKNOWN;
+    std::map<char, TokenType>::const_iterator it = tok_types.find(symbol);
+    return it == tok_types.end() ? UNKNOWN : it->second;
 }
 
 bool Lexer::TryParseToken(string const& token_value) {
@@ -144,7 +112,7 @@ bool Lexer::TryParseToken(string const& token_value) {
 
 TokenType Lexer::DetermineTokenType(string const& token_value) {
     if(isalpha(token_value[0])) {
-        if(std::find(KEYWORDS, KEYWORDS + KEYWORDS_NUMBER, token_value) != KEYWORDS + KEYWORDS_NUMBER) {
+        if(std::find(KEYWORDS.begin(), KEYWORDS.end(), token_value) != KEYWORDS.end()) {
             return KEYWORD;
         }
         return ID;

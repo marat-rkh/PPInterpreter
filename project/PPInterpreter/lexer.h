@@ -37,24 +37,23 @@ class Token {
     std::string value_;
 };
 
-static const string KEYWORDS[] = {"def", "end", "if", "while", "return", "print", "read"};
-static const size_t KEYWORDS_NUMBER = 7;
+static const vector<string> KEYWORDS = {"def", "end", "if", "while", "return", "print", "read"};
 
 class Lexer {
 public:
-    Lexer(): current_line_(1), lexing_error_(false), fopen_error_(false) {}
+    Lexer(): current_line_(1), error_() {}
     void Tokenize(string const& file_name);
     vector<Token> const& tokens() {
         return tokens_;
     }
     bool IsErrorOccured() {
-        return lexing_error_ || fopen_error_;
+        return !error_.empty();
     }
     std::string GetErrorMessage() {
-        if(lexing_error_) {
+        if(error_ == "syntax_error") {
             return "line " + std::to_string(current_line_) + ": syntax error";
         }
-        else if(fopen_error_) {
+        else if(error_ == "fopen_error") {
             return "can't open file";
         }
         return "no errors";
@@ -71,8 +70,7 @@ private:
     fstream input_;
     vector<Token> tokens_;
     size_t current_line_;
-    bool lexing_error_;
-    bool fopen_error_;
+    std::string error_;
 };
 
 #endif // LEXER_H

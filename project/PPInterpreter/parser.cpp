@@ -5,7 +5,7 @@ class FuncCreator {
 public:
     void CreateWithBody(InstructionBlock const& body) {
         PtrVisitable func(new Function(body, params, line_number));
-        FuncsScope::funcs.insert(std::pair<std::string, PtrVisitable> (id, func));
+        Evaluator::funcs.insert(std::pair<std::string, PtrVisitable> (id, func));
     }
     std::string id;
     size_t line_number;
@@ -23,6 +23,9 @@ public:
 };
 
 Program Parser::Parse(vector<Token> const& tokens) {
+    current_line_ = 1;
+    error_occured_ = false;
+    Evaluator::funcs.empty();
     InstructionBlock program_body;
     TokIterator it = tokens.begin();
     while(it != tokens.end()) {

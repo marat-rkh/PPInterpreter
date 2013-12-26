@@ -38,6 +38,7 @@ public:
     virtual int visit(IfInstr *c);
     virtual int visit(WhileInstr *c);
 
+    static Scope funcs;
 private:
     int VisitExpr(ArithmExpr* c);
     int VisitTerm(ArithmExpr* c);
@@ -45,11 +46,6 @@ private:
     std::stack<Scope> scope_stack_;
     Error error_;
     bool return_instr_happened_;
-};
-
-class FuncsScope {
-public:
-    static Scope funcs;
 };
 
 #endif // EVALUATOR_H

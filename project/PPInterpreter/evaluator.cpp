@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-Scope FuncsScope::funcs;
+Scope Evaluator::funcs;
 
 int Evaluator::visit(Program *c) {
     c->body().accept(*this);
@@ -48,8 +48,8 @@ int Evaluator::visit(Assignment *c) {
 }
 
 int Evaluator::visit(FuncCall *c) {
-    Scope::iterator it = FuncsScope::funcs.find(c->id());
-    if(it == FuncsScope::funcs.end()) {
+    Scope::iterator it = Evaluator::funcs.find(c->id());
+    if(it == Evaluator::funcs.end()) {
         error_.Set(Error::UNDEFFUNC_ER, c->line_number(), c->id());
         return 0;
     }
