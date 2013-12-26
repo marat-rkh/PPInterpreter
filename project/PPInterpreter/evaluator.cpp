@@ -41,18 +41,9 @@ int Evaluator::visit(InstructionBlock *c) {
 
 int Evaluator::visit(Assignment *c) {
     int value = c->expr()->accept(*this);
-    if(error_.IsOccured()) {
+    if (error_.IsOccured())
         return 0;
-    }
-    Scope::iterator it = scope_stack_.top().find(c->id());
-
-    PtrVisitable number(new Number(value));
-    if(it == scope_stack_.top().end()) {
-        scope_stack_.top().insert(std::pair<std::string, PtrVisitable>(c->id(), number));
-    }
-    else {
-        it->second = number;
-    }
+    scope_stack_.top()[c->id()] = PtrVisitable(new Number(value));
     return 0;
 }
 

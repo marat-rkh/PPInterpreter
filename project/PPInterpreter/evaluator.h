@@ -21,7 +21,7 @@ public:
         scope_stack_.push(empty_scope);
     }
 
-    virtual int visit(Program *c) ;
+    virtual int visit(Program *c);
     virtual int visit(Function *c);
     virtual int visit(InstructionBlock *c);
     virtual int visit(ReadInstr *c);
@@ -30,6 +30,7 @@ public:
     virtual int visit(Assignment *c);
     virtual int visit(FuncCall *c);
     virtual int visit(Variable *c);
+
     virtual int visit(ArithmExpr *c);
     virtual int visit(Factor *c);
     virtual int visit(Number *c);

@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cctype>
 #include <algorithm>
+#include <map>
 
 using std::string;
 using std::vector;
@@ -34,6 +35,10 @@ static const char NLINE = '\n';
 
 void Lexer::Tokenize(string const& file_name) {
     input_.close();
+    tokens_.empty();
+    current_line_ = 1;
+    lexing_error_= false;
+    fopen_error_ = false;
     input_.open(file_name.c_str(), std::ios_base::in);
     if(!input_.is_open()) {
         fopen_error_ = true;
@@ -83,10 +88,7 @@ bool Lexer::TryParseLine(string const& line) {
             tokens_.push_back(Token(type, string() + line[i]));
         }
     }
-    if(!TryParseToken(token_val)) {
-        return false;
-    }
-    return true;
+    return TryParseToken(token_val);
 }
 
 TokenType Lexer::ParseSymbol(char symbol) {

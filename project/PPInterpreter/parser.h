@@ -15,6 +15,9 @@ using std::vector;
 enum ParsingResult {CORRECT, INCORRECT, NOT_MATCHED};
 typedef std::vector<Token>::const_iterator TokIterator;
 
+class FuncCreator;
+class FuncCallCreator;
+
 class Parser {
 public:
     Parser(): current_line_(1), error_occured_(false) {}
@@ -28,9 +31,6 @@ private:
 
     ParsingResult ParseStmt(InstructionBlock& program_body, TokIterator& it);
     ParsingResult ParseFuncDecl(TokIterator& it);
-
-    class FuncCreator;
-    class FuncCallCreator;
     ParsingResult ParseFuncDeclHeader(FuncCreator& cr, TokIterator& it);
     template<class T>
     ParsingResult ParseFuncName(T& cr, TokIterator& it);
@@ -57,26 +57,6 @@ private:
     ParsingResult ParseFactor(Factor& term, TokIterator& it);
     ParsingResult ParseExprInParanthesis(Factor& factor, TokIterator& it);
     ParsingResult ParseFactorFuncCall(Factor& factor, TokIterator& it);
-
-    class FuncCreator {
-    public:
-        void CreateWithBody(InstructionBlock const& body) {
-            PtrVisitable func(new Function(body, params, line_number));
-            FuncsScope::funcs.insert(std::pair<std::string, PtrVisitable> (id, func));
-        }
-        std::string id;
-        size_t line_number;
-        std::vector<std::string> params;
-    };
-    class FuncCallCreator {
-    public:
-        FuncCall Create() {
-            return FuncCall(id, params, line_number);
-        }
-        std::string id;
-        size_t line_number;
-        std::vector<ArithmExpr> params;
-    };
 };
 
 #endif // PARSER_H

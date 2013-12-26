@@ -44,7 +44,7 @@ class Lexer {
 public:
     Lexer(): current_line_(1), lexing_error_(false), fopen_error_(false) {}
     void Tokenize(string const& file_name);
-    vector<Token> tokens() {
+    vector<Token> const& tokens() {
         return tokens_;
     }
     bool IsErrorOccured() {
