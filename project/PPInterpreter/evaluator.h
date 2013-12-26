@@ -32,7 +32,7 @@ public:
     virtual int visit(Variable *c);
 
     virtual int visit(ArithmExpr *c);
-    virtual int visit(Factor *c);
+    virtual int visit(UnaryMinExpr *c);
     virtual int visit(Number *c);
     virtual int visit(Condition *c);
     virtual int visit(IfInstr *c);

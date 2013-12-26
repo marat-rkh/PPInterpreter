@@ -130,25 +130,21 @@ class Assignment : public Visitable {
     PtrVisitable expr_;
 };
 
-class Factor : public Visitable {
+class UnaryMinExpr : public Visitable {
 public:
-    Factor(): unary_minus_set_(false) {}
-    Factor(Factor const& f):
-        Visitable(f),
-        unary_minus_set_(false),
-        fact_expr_(f.fact_expr_)
+    UnaryMinExpr() {}
+    UnaryMinExpr(UnaryMinExpr const& e):
+        Visitable(e),
+        expr_(e.expr_)
     {}
-    void SetFactExpr(PtrVisitable const& fact_expr) {
-        fact_expr_ = fact_expr;
+    UnaryMinExpr(PtrVisitable const& p) {
+        expr_ = p;
     }
-    void SetUnaryMinus() { unary_minus_set_ = true; }
-    bool unary_minus_set() { return unary_minus_set_; }
-    PtrVisitable const& fact_expr() { return fact_expr_; }
+    PtrVisitable & expr() { return expr_; }
     virtual int accept(Visitor &v) { return v.visit(this); }
 
 private:
-    bool unary_minus_set_;
-    PtrVisitable fact_expr_;
+    PtrVisitable expr_;
 };
 
 class FuncCall : public Visitable {

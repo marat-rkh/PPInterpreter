@@ -325,12 +325,11 @@ bool Parser::ParseExprLoop(ArithmExpr& expr, TokIterator& it) {
 
 ParsingResult Parser::ParseTerm(ArithmExpr& term, TokIterator& it) {
     term.SetLineNumber(current_line_);
-    Factor factor;
-    ParsingResult fact_res = ParseFactor(factor, it);
+    ParsingResult fact_res = ParseFactor(term, it);
     if(fact_res != CORRECT) {
         return fact_res;
     }
-    term.AddElem(PtrVisitable(new Factor(factor)));
+//    term.AddElem(PtrVisitable(new Factor(factor)));
     return ParseTermLoop(term, it) ? CORRECT : INCORRECT;
 }
 
@@ -341,49 +340,62 @@ bool Parser::ParseTermLoop(ArithmExpr& term, TokIterator& it) {
         return true;
     }
     term.AddOperation(it->value_);
-    Factor factor;
-    ParsingResult fact_res = ParseFactor(factor, ++it);
+//    Factor factor;
+    ParsingResult fact_res = ParseFactor(term, ++it);
     if(fact_res != CORRECT) {
         return false;
     }
-    term.AddElem(PtrVisitable(new Factor(factor)));
+//    term.AddElem(PtrVisitable(new Factor(factor)));
     return ParseTermLoop(term, it);
 }
 
-ParsingResult Parser::ParseFactor(Factor& factor, TokIterator& it) {
+ParsingResult Parser::ParseFactor(ArithmExpr& term, TokIterator& it) {
+    bool is_unary_minus = false;
     if(it->type_ == MINUS_OP) {
-        factor.SetUnaryMinus();
+        is_unary_minus = true;
         ++it;
     }
     if(it->type_ == NUMBER) {
-        factor.SetFactExpr(PtrVisitable(new Number((it++)->value_)));
+        PtrVisitable PtrNum = PtrVisitable(new Number((it++)->value_));
+        if(is_unary_minus) {
+            PtrNum = PtrVisitable(new UnaryMinExpr(PtrNum));
+        }
+        term.AddElem(PtrNum);
         return CORRECT;
     }
-    ParsingResult func_call_res = ParseFactorFuncCall(factor, it);
+    ParsingResult func_call_res = ParseFactorFuncCall(term, it, is_unary_minus);
     if(func_call_res != NOT_MATCHED) {
         return func_call_res;
     }
     if(it->type_ == ID) {
-        factor.SetFactExpr(PtrVisitable(new Variable((it++)->value_, current_line_)));
+        PtrVisitable PtrVar = PtrVisitable(new Variable((it++)->value_, current_line_));
+        if(is_unary_minus) {
+            PtrVar = PtrVisitable(new UnaryMinExpr(PtrVar));
+        }
+        term.AddElem(PtrVar);
         return CORRECT;
     }
-    return ParseExprInParanthesis(factor, it);
+    return ParseExprInParanthesis(term, it, is_unary_minus);
 }
 
-ParsingResult Parser::ParseFactorFuncCall(Factor &factor, TokIterator &it) {
+ParsingResult Parser::ParseFactorFuncCall(ArithmExpr& term, TokIterator &it, bool is_unary_minus) {
     FuncCallCreator func_call_creator;
     ParsingResult func_res = ParseFuncCallHeader(func_call_creator, it);
     if(func_res != NOT_MATCHED) {
         if(func_res != CORRECT) {
             return INCORRECT;
         }
-        factor.SetFactExpr(PtrVisitable(new FuncCall(func_call_creator.Create())));
+        PtrVisitable PtrFuncCall = PtrVisitable(new FuncCall(func_call_creator.Create()));
+        if(is_unary_minus) {
+            PtrFuncCall = PtrVisitable(new UnaryMinExpr(PtrFuncCall));
+        }
+        term.AddElem(PtrFuncCall);
         return CORRECT;
     }
     return NOT_MATCHED;
 }
 
-ParsingResult Parser::ParseExprInParanthesis(Factor &factor, TokIterator &it) {
+ParsingResult Parser::ParseExprInParanthesis(ArithmExpr& term, TokIterator &it, bool is_unary_minus) {
     if(it->type_ != OPEN_BRACE) {
         return NOT_MATCHED;
     }
@@ -392,7 +404,12 @@ ParsingResult Parser::ParseExprInParanthesis(Factor &factor, TokIterator &it) {
     if(expr_res != CORRECT) {
         return INCORRECT;
     }
-    factor.SetFactExpr(PtrVisitable(new ArithmExpr(expr)));
+    PtrVisitable PtrExpr = PtrVisitable(new ArithmExpr(expr));
+    if(is_unary_minus) {
+        PtrExpr = PtrVisitable(new UnaryMinExpr(PtrExpr));
+    }
+    term.AddElem(PtrExpr);
     return (it++)->type_ == CLOSE_BRACE ? CORRECT : INCORRECT;
-}class FuncCreator;
-class FuncCallCreator;
+}
+//class FuncCreator;
+//class FuncCallCreator;

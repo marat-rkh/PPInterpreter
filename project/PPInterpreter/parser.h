@@ -54,9 +54,9 @@ private:
     ParsingResult ParseTerm(ArithmExpr& term, TokIterator& it);
     bool ParseTermLoop(ArithmExpr& term, TokIterator& it);
 
-    ParsingResult ParseFactor(Factor& term, TokIterator& it);
-    ParsingResult ParseExprInParanthesis(Factor& factor, TokIterator& it);
-    ParsingResult ParseFactorFuncCall(Factor& factor, TokIterator& it);
+    ParsingResult ParseFactor(ArithmExpr& term, TokIterator& it);
+    ParsingResult ParseExprInParanthesis(ArithmExpr& term, TokIterator& it, bool is_unary_minus);
+    ParsingResult ParseFactorFuncCall(ArithmExpr& term, TokIterator& it, bool is_unary_minus);
 };
 
 #endif // PARSER_H

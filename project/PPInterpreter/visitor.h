@@ -11,7 +11,7 @@ class Assignment;
 class FuncCall;
 class Variable;
 class ArithmExpr;
-class Factor;
+class UnaryMinExpr;
 class Number;
 class Condition;
 class IfInstr;
@@ -30,7 +30,7 @@ public:
     virtual int visit(FuncCall *c) = 0;
     virtual int visit(Variable *c) = 0;
     virtual int visit(ArithmExpr *c) = 0;
-    virtual int visit(Factor *c) = 0;
+    virtual int visit(UnaryMinExpr *c) = 0;
     virtual int visit(Number *c) = 0;
     virtual int visit(Condition *c) = 0;
     virtual int visit(IfInstr *c) = 0;

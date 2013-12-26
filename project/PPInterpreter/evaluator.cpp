@@ -235,15 +235,20 @@ int Evaluator::VisitTerm(ArithmExpr *c) {
     return result;
 }
 
-int Evaluator::visit(Factor *c) {
-    int value = c->fact_expr()->accept(*this);
-    if(error_.IsOccured()) {
-        return 0;
-    }
-    if(c->unary_minus_set()) {
-        return -1 * value;
-    }
-    return value;
+//int Evaluator::visit(Factor *c) {
+//    int value = c->fact_expr()->accept(*this);
+//    if(error_.IsOccured()) {
+//        return 0;
+//    }
+//    if(c->unary_minus_set()) {
+//        return -1 * value;
+//    }
+//    return value;
+//}
+
+int Evaluator::visit(UnaryMinExpr *c) {
+    int value = c->expr()->accept(*this);
+    return error_.IsOccured() ? 0 : value * (-1);
 }
 
 int Evaluator::visit(Number *c) {
