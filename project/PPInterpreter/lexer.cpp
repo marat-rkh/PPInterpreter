@@ -12,7 +12,7 @@ using std::string;
 using std::vector;
 using std::fstream;
 
-static const std::map<char, TokenType> tok_types = {
+static const std::map<char, TokenType> tok_types {
     {'_', ID},
     {'+', PLUS_OP},
     {'-', MINUS_OP},

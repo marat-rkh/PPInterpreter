@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -Wall -pedantic -std=c++0x
+CXXFLAGS = -Wall -pedantic -std=c++11
 
 SRCDIR =
 OUTDIR = bin

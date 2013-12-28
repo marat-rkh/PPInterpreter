@@ -21,22 +21,22 @@ public:
         scope_stack_.push(empty_scope);
     }
 
-    virtual int visit(Program *c);
-    virtual int visit(Function *c);
-    virtual int visit(InstructionBlock *c);
-    virtual int visit(ReadInstr *c);
-    virtual int visit(PrintInstr *c);
-    virtual int visit(ReturnInstr *c);
-    virtual int visit(Assignment *c);
-    virtual int visit(FuncCall *c);
-    virtual int visit(Variable *c);
+    virtual int visit(Program *c) override;
+    virtual int visit(Function *c) override;
+    virtual int visit(InstructionBlock *c) override;
+    virtual int visit(ReadInstr *c) override;
+    virtual int visit(PrintInstr *c) override;
+    virtual int visit(ReturnInstr *c) override;
+    virtual int visit(Assignment *c) override;
+    virtual int visit(FuncCall *c) override;
+    virtual int visit(Variable *c) override;
 
-    virtual int visit(ArithmExpr *c);
-    virtual int visit(UnaryMinExpr *c);
-    virtual int visit(Number *c);
-    virtual int visit(Condition *c);
-    virtual int visit(IfInstr *c);
-    virtual int visit(WhileInstr *c);
+    virtual int visit(ArithmExpr *c) override;
+    virtual int visit(UnaryMinExpr *c) override;
+    virtual int visit(Number *c) override;
+    virtual int visit(Condition *c) override;
+    virtual int visit(IfInstr *c) override;
+    virtual int visit(WhileInstr *c) override;
 
     static Scope funcs;
 private:

@@ -37,7 +37,7 @@ class Token {
     std::string value_;
 };
 
-static const vector<string> KEYWORDS = {"def", "end", "if", "while", "return", "print", "read"};
+static const vector<string> KEYWORDS {"def", "end", "if", "while", "return", "print", "read"};
 
 class Lexer {
 public:

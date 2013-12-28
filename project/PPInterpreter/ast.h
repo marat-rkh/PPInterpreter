@@ -46,7 +46,7 @@ class InstructionBlock : public Visitable {
     }
     std::vector<PtrVisitable>& instructions() { return instructions_; }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     std::vector<PtrVisitable> instructions_;
@@ -69,7 +69,7 @@ class Function : public Visitable {
     }
     std::vector<std::string>& params() { return params_; }
     InstructionBlock& body() { return body_; }
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     std::vector<std::string> params_;
@@ -90,7 +90,7 @@ class ArithmExpr : public Visitable {
     std::vector<std::string>& operations() { return operations_; }
     std::vector<PtrVisitable>& elements() { return elements_; }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   protected:
     std::vector<std::string> operations_;
@@ -102,7 +102,7 @@ public:
     Number(int val): value_(val) {}
     Number(std::string const& num) { value_ = atoi(num.c_str()); }
     int value() { return value_; }
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
 private:
     int value_;
@@ -123,7 +123,7 @@ class Assignment : public Visitable {
     std::string& id() { return id_; }
     PtrVisitable& expr() { return expr_; }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     std::string id_;
@@ -141,7 +141,7 @@ public:
         expr_ = p;
     }
     PtrVisitable & expr() { return expr_; }
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
 private:
     PtrVisitable expr_;
@@ -162,7 +162,7 @@ class FuncCall : public Visitable {
     std::string& id() { return id_; }
     std::vector<ArithmExpr>& params() { return params_; }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     std::string id_;
@@ -183,7 +183,7 @@ class PrintInstr : public Visitable {
         expr_ = PtrVisitable(new ArithmExpr(expr));
     }
     PtrVisitable& expr() { return expr_; }
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     PtrVisitable expr_;
@@ -200,7 +200,7 @@ public:
         id_(ri.id_) {}
     std::string& id() { return id_; }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
 private:
     std::string id_;
@@ -215,7 +215,7 @@ class ReturnInstr : public Visitable {
     {}
     PtrVisitable& expr() { return expr_; }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     PtrVisitable expr_;
@@ -229,7 +229,7 @@ class Variable : public Visitable {
     {}
     std::string& id() { return id_; }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     std::string id_;
@@ -255,7 +255,7 @@ class Condition : public Visitable {
     ArithmExpr& e2() { return e2_; }
     std::string& comp_char() { return comp_char_; }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     ArithmExpr e1_;
@@ -296,7 +296,7 @@ class IfInstr : public ControlFlowInstr {
         ControlFlowInstr(ii)
     {}
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 };
 
 class WhileInstr: public ControlFlowInstr {
@@ -305,7 +305,7 @@ class WhileInstr: public ControlFlowInstr {
         ControlFlowInstr(c, body)
     {}
     WhileInstr(WhileInstr const& wi): ControlFlowInstr(wi) {}
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 };
 
 class Program: public Visitable {
@@ -327,7 +327,7 @@ class Program: public Visitable {
     bool RuntimeErrorIsOccured() { return error_.IsOccured(); }
     std::string GetErrorMessage() { return error_.GetErrorMessage(); }
 
-    virtual int accept(Visitor &v) { return v.visit(this); }
+    virtual int accept(Visitor &v) override { return v.visit(this); }
 
   private:
     InstructionBlock body_;
